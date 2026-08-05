@@ -1,82 +1,225 @@
 {
   "global": {
-    "files": "/src/**/*.*"
+    "files": "/src/**/*.*",
+    "skipGeneratedGatewayClasses": true,
+    "skipGeneratedPersistentClasses": true,
+    "skipGeneratedFunctionGroups": true
   },
   "dependencies": [
     {
-      "url": "https://github.com/abaplint/deps",
+      "url": "https://github.com/abapedia/steampunk-2302-api",
       "folder": "/deps",
       "files": "/src/**/*.*"
     }
   ],
   "syntax": {
-    "version": "v702",
-    "errorNamespace": "^(Z|Y|LCL_|TY_|LIF_)"
+    "version": "Cloud",
+    "errorNamespace": "."
   },
   "rules": {
+    "check_syntax": true,
+    "parser_error": true,
+    "unknown_types": true,
+    "implement_methods": true,
+    "method_implemented_twice": true,
+    "identical_conditions": true,
+    "identical_contents": true,
+    "identical_move": true,
+    "unreachable_code": true,
+    "invalid_table_index": true,
+    "try_without_catch": true,
+    "uncaught_exception": true,
+    "superfluous_value": true,
+    "redundant_conversion": true,
+    "no_inline_in_optional_branches": false,
+    "many_parentheses": true,
+    "cloud_types": {
+      "exclude": [
+        ".*\\.(g4ba|srvb|srvd|sush|susc|suso|auth)\\..*"
+      ]
+    },
+    "sy_read_restriction": true,
+    "sy_modification": true,
+    "no_mandt_in_database_operations": true,
+    "modify_only_own_db_tables": true,
+    "call_transaction_authority_check": true,
+    "forbidden_void_type": {
+      "check": [
+        "^(?!Z|Y).*"
+      ]
+    },
+    "dangerous_statement": true,
+    "cds_legacy_view": true,
+    "strict_sql": true,
+    "sql_escape_host_variables": true,
+    "sql_value_conversion": true,
+    "select_performance": {
+      "selectStar": true,
+      "endSelect": true,
+      "selectSingleFullKey": true
+    },
+    "db_operation_in_loop": true,
+    "select_add_order_by": true,
+    "unsecure_fae": true,
+    "select_single_full_key": true,
+    "no_prefixes": {
+      "types": "^ZZ_NEVER_MATCH_"
+    },
+    "prefer_inline": true,
+    "prefer_is_not": true,
+    "prefer_xsdbool": true,
+    "prefer_corresponding": true,
+    "prefer_raise_exception_new": true,
+    "prefer_returning_to_exporting": true,
+    "prefer_pragmas": true,
+    "use_new": true,
+    "use_line_exists": true,
+    "use_bool_expression": true,
+    "use_class_based_exceptions": true,
+    "no_yoda_conditions": true,
+    "preferred_compare_operator": true,
+    "omit_preceding_zeros": true,
+    "omit_receiving": true,
+    "omit_parameter_name": true,
+    "no_chained_assignment": true,
+    "chain_mainly_declarations": true,
+    "avoid_use": true,
+    "no_macros": true,
+    "unused_macros": true,
+    "reduce_procedural_code": true,
+    "functional_writing": true,
+    "static_call_via_instance": true,
+    "prefix_is_current_class": true,
+    "fully_type_constants": true,
+    "fully_type_itabs": true,
+    "constructor_visibility_public": true,
+    "no_public_attributes": true,
+    "method_overwrites_builtin": true,
+    "no_aliases": false,
+    "definitions_top": false,
+    "superclass_final": true,
+    "check_abstract": {
+      "exclude": [
+        "zbp_.*"
+      ]
+    },
     "exporting": true,
+    "mix_returning": true,
+    "clear_exporting_parameters": true,
+    "unnecessary_return": true,
+    "unnecessary_chaining": true,
+    "unnecessary_pragma": true,
+    "exit_or_check": true,
+    "if_in_if": true,
+    "change_if_to_case": true,
+    "short_case": true,
+    "when_others_last": true,
+    "empty_statement": true,
+    "empty_structure": true,
+    "unused_variables": {
+      "exclude": [
+        "zbp_.*"
+      ]
+    },
+    "unused_types": true,
+    "unused_methods": {
+      "exclude": [
+        "zbp_.*"
+      ]
+    },
+    "unused_ddic": true,
+    "commented_code": true,
+    "check_comments": true,
+    "abapdoc": {
+      "classDefinition": true,
+      "interfaceDefinition": true,
+      "ignoreTestClasses": true,
+      "checkLocal": false
+    },
+    "description_empty": true,
+    "identical_descriptions": true,
+    "check_text_elements": true,
+    "easy_to_find_messages": true,
+    "message_exists": true,
+    "local_testclass_consistency": true,
+    "add_test_attributes": true,
+    "no_external_form_calls": true,
     "local_class_naming": {
-      "exclude": [],
-      "severity": "Error",
-      "patternKind": "required",
-      "ignoreNames": [],
-      "ignorePatterns": [],
       "local": "^L.+$",
       "exception": "^LCX_.+$",
-      "test": "^L.+$"
+      "test": "^LT[CDH]_.+$"
     },
-    "method_parameter_names": {
-      "exclude": [],
-      "severity": "Error",
-      "patternKind": "required",
-      "ignoreNames": [],
-      "ignorePatterns": [],
-      "ignoreExceptions": true,
-      "importing": "^[Ii]_.+$",
-      "returning": "^[Rr]_.+$",
-      "changing": "^C._.+$",
-      "exporting": "^[Ee]_.+$"
+    "types_naming": {
+      "pattern": "^TY_.+$"
     },
+    "method_parameter_names": false,
+    "local_variable_names": false,
+    "class_attribute_names": false,
     "object_naming": {
-      "exclude": [],
-      "severity": "Error",
-      "patternKind": "required",
-      "ignoreNames": [],
-      "ignorePatterns": [],
       "clas": "^Z(C[LX]|BP)",
       "intf": "^ZIF",
-      "prog": "^Z",
-      "fugr": "^Z",
       "tabl": "^Z",
       "ttyp": "^Z",
       "dtel": "^Z",
       "doma": "^Z",
       "msag": "^Z",
-      "tran": "^Z",
-      "enqu": "^EZ",
-      "auth": "^Z",
-      "pinf": "^Z",
-      "idoc": "^Z",
-      "xslt": "^Z",
-      "ssfo": "^Z",
-      "ssst": "^Z",
-      "shlp": "^Z"
+      "shlp": "^Z",
+      "enqu": "^EZ"
     },
-    "selection_screen_naming": {
-      "exclude": [],
-      "severity": "Error",
-      "patternKind": "required",
-      "ignoreNames": [],
-      "ignorePatterns": [],
-      "parameter": "^P_.+$",
-      "selectOption": "^S_.+$",
-      "screenElement": "^SC_.+$"
+    "line_length": {
+      "length": 120
     },
-    "types_naming": {
-      "exclude": [],
-      "severity": "Error",
-      "pattern": "^T.+$"
+    "max_one_statement": true,
+    "keyword_case": true,
+    "indentation": true,
+    "in_statement_indentation": true,
+    "start_at_tab": true,
+    "contains_tab": true,
+    "double_space": true,
+    "whitespace_end": true,
+    "space_before_colon": true,
+    "space_before_dot": true,
+    "colon_missing_space": true,
+    "line_only_punc": true,
+    "sequential_blank": true,
+    "empty_line_in_statement": true,
+    "newline_between_methods": true,
+    "no_comments_between_methods": true,
+    "align_parameters": true,
+    "align_type_expressions": true,
+    "names_no_dash": true,
+    "max_one_method_parameter_per_line": true,
+    "keep_single_parameter_on_one_line": true,
+    "7bit_ascii": true,
+    "begin_end_names": true,
+    "method_length": {
+      "statements": 40
     },
-    "unused_variables": true
+    "cyclomatic_complexity": {
+      "max": 12
+    },
+    "nesting": {
+      "depth": 4
+    },
+    "obsolete_statement": true,
+    "forbidden_pseudo_and_pragma": true,
+    "downport": false,
+    "line_break_multiple_parameters": true,
+    "line_break_style": {
+      "severity": "Warning"
+    },
+    "check_subrc": {
+      "openDataset": true,
+      "authorityCheck": true,
+      "assign": true,
+      "insertDatabase": true,
+      "updateDatabase": true,
+      "modifyDatabase": true,
+      "deleteDatabase": true,
+      "selectSingle": false,
+      "selectTable": false,
+      "readTable": false,
+      "find": false
+    }
   }
 }
