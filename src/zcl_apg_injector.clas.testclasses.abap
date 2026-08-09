@@ -73,7 +73,7 @@ CLASS ltc_injector IMPLEMENTATION.
     TRY.
         " ACT
         zcl_apg_injector=>get_handler( mock_classname ).
-        cl_abap_unit_assert=>fail( msg = 'Wrong mock type must raise zcx_apg_error' ).
+        cl_abap_unit_assert=>fail( 'Wrong mock type must raise zcx_apg_error' ).
       CATCH zcx_apg_error INTO DATA(error).
         " ASSERT
         cl_abap_unit_assert=>assert_equals( act = error->if_t100_message~t100key
@@ -86,7 +86,7 @@ CLASS ltc_injector IMPLEMENTATION.
     TRY.
         " ACT
         zcl_apg_injector=>get_handler( 'ZCL_APG_DOES_NOT_EXIST' ).
-        cl_abap_unit_assert=>fail( msg = 'Unknown class must raise zcx_apg_error' ).
+        cl_abap_unit_assert=>fail( 'Unknown class must raise zcx_apg_error' ).
       CATCH zcx_apg_error INTO DATA(error).
         " ASSERT
         cl_abap_unit_assert=>assert_equals( act = error->if_t100_message~t100key

@@ -90,8 +90,7 @@ ENDCLASS.
 CLASS ltc_factory IMPLEMENTATION.
 
   METHOD class_setup.
-    osql_environment = cl_osql_test_environment=>create( VALUE #( ( 'ZAPG_POINT' )
-                                                                  ( 'ZAPG_GATE_HANDLE' ) ) ).
+    osql_environment = cl_osql_test_environment=>create( VALUE #( ( 'ZAPG_POINT' ) ( 'ZAPG_GATE_HANDLE' ) ) ).
   ENDMETHOD.
 
   METHOD class_teardown.
@@ -139,7 +138,7 @@ CLASS ltc_factory IMPLEMENTATION.
 
   METHOD given_db_cfg_then_seq_order.
     " ARRANGE - two active gates, inserted in reverse sequence order
-    insert_point( active = zcl_apg_factory=>activation_status-active ).
+    insert_point( zcl_apg_factory=>activation_status-active ).
     insert_gate( seqno         = '002'
                  handler_class = handler_class_2
                  active        = zcl_apg_factory=>activation_status-active ).
@@ -162,7 +161,7 @@ CLASS ltc_factory IMPLEMENTATION.
 
   METHOD given_inactive_gate_then_skip.
     " ARRANGE
-    insert_point( active = zcl_apg_factory=>activation_status-active ).
+    insert_point( zcl_apg_factory=>activation_status-active ).
     insert_gate( seqno         = '001'
                  handler_class = handler_class_1
                  active        = zcl_apg_factory=>activation_status-inactive ).
@@ -185,7 +184,7 @@ CLASS ltc_factory IMPLEMENTATION.
 
   METHOD given_point_off_then_empty.
     " ARRANGE
-    insert_point( active = zcl_apg_factory=>activation_status-inactive ).
+    insert_point( zcl_apg_factory=>activation_status-inactive ).
     insert_gate( seqno         = '001'
                  handler_class = handler_class_1
                  active        = zcl_apg_factory=>activation_status-active ).
@@ -213,7 +212,7 @@ CLASS ltc_factory IMPLEMENTATION.
                  handler_class = handler_class_1
                  active        = zcl_apg_factory=>activation_status-active ).
 
-    DATA(toggle) = NEW ltd_counting_toggle( active = abap_true ).
+    DATA(toggle) = NEW ltd_counting_toggle( abap_true ).
     zcl_apg_injector=>inject_instance( classname = toggle_class
                                        instance  = toggle ).
 
@@ -232,7 +231,7 @@ CLASS ltc_factory IMPLEMENTATION.
 
   METHOD given_params_then_delivered.
     " ARRANGE
-    insert_point( active = zcl_apg_factory=>activation_status-active ).
+    insert_point( zcl_apg_factory=>activation_status-active ).
     insert_gate( seqno         = '001'
                  handler_class = handler_class_1
                  active        = zcl_apg_factory=>activation_status-active
@@ -266,7 +265,7 @@ CLASS ltc_factory IMPLEMENTATION.
         " ACT
         zcl_apg_factory=>get_active_handlers_for_gate( point_id = point_id
                                                        context  = context ).
-        cl_abap_unit_assert=>fail( msg = 'Failing toggle must raise zcx_apg_error' ).
+        cl_abap_unit_assert=>fail( 'Failing toggle must raise zcx_apg_error' ).
       CATCH zcx_apg_error INTO DATA(error).
         " ASSERT
         cl_abap_unit_assert=>assert_equals( act = error->if_t100_message~t100key

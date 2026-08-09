@@ -97,7 +97,7 @@ CLASS ltc_context IMPLEMENTATION.
     TRY.
         " ACT
         cut->get_string( `MISSING` ).
-        cl_abap_unit_assert=>fail( msg = 'Reading a missing name must raise zcx_apg_error' ).
+        cl_abap_unit_assert=>fail( 'Reading a missing name must raise zcx_apg_error' ).
       CATCH zcx_apg_error INTO DATA(error).
         " ASSERT
         cl_abap_unit_assert=>assert_equals( act = error->if_t100_message~t100key
