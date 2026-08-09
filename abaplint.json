@@ -14,7 +14,7 @@
   ],
   "syntax": {
     "version": "Cloud",
-    "errorNamespace": "."
+    "errorNamespace": "^(Z|Y)"
   },
   "rules": {
     "check_syntax": true,
