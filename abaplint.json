@@ -45,7 +45,7 @@
     "call_transaction_authority_check": true,
     "forbidden_void_type": {
       "check": [
-        "^(?!(i_journalentry|cl_apg_elemdescr|cl_abap_elemdescr|cl_abap_classdescr)$).*$"
+        "^(?!(i_journalentry|cl_abap_elemdescr|cl_abap_classdescr|zi_apg_active_vh|zi_apg_point_type_vh)$).*$"
       ]
     },
     "dangerous_statement": true,
