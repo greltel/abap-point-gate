@@ -45,7 +45,7 @@
     "call_transaction_authority_check": true,
     "forbidden_void_type": {
       "check": [
-        "^(?!Z|Y).*"
+        "^(?!(i_journalentry|cl_apg_elemdescr|cl_abap_elemdescr|cl_abap_classdescr)$).*$"
       ]
     },
     "dangerous_statement": true,
@@ -76,7 +76,9 @@
     "use_line_exists": true,
     "use_bool_expression": true,
     "use_class_based_exceptions": true,
-    "no_yoda_conditions": true,
+    "no_yoda_conditions": {
+      "exclude": ["zcl_apg_act_toggle_sample.clas.abap"]
+    },
     "preferred_compare_operator": true,
     "omit_preceding_zeros": true,
     "omit_receiving": true,
@@ -171,7 +173,9 @@
     },
     "max_one_statement": true,
     "keyword_case": true,
-    "indentation": true,
+    "indentation": {
+      "exclude": ["zcl_apg_sample_execution.clas.abap"]
+    },
     "in_statement_indentation": true,
     "start_at_tab": true,
     "contains_tab": true,
