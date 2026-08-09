@@ -8,6 +8,17 @@ CLASS ltd_handler IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
+CLASS ltd_failing_toggle DEFINITION FINAL FOR TESTING.
+  PUBLIC SECTION.
+    INTERFACES zif_apg_activation_toggle.
+ENDCLASS.
+
+CLASS ltd_failing_toggle IMPLEMENTATION.
+  METHOD zif_apg_activation_toggle~is_active.
+    RAISE EXCEPTION NEW zcx_apg_error( textid     = zcx_apg_error=>class_not_found
+                                       class_name = `LTD_FAILING_TOGGLE` ).
+  ENDMETHOD.
+ENDCLASS.
 
 CLASS ltd_counting_toggle DEFINITION FINAL FOR TESTING.
   PUBLIC SECTION.
@@ -72,6 +83,7 @@ CLASS ltc_factory DEFINITION
     METHODS given_point_off_then_empty    FOR TESTING RAISING zcx_apg_error.
     METHODS given_point_tgl_then_one_call FOR TESTING RAISING zcx_apg_error.
     METHODS given_params_then_delivered   FOR TESTING RAISING zcx_apg_error.
+    METHODS given_toggle_err_then_008     FOR TESTING RAISING zcx_apg_error.
 ENDCLASS.
 
 
@@ -238,6 +250,29 @@ CLASS ltc_factory IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals( act = handlers[ 1 ]-parameters-param_2
                                         exp = 'BETA'
                                         msg = 'Param 2 must reach the resolved handler entry' ).
+  ENDMETHOD.
+
+  METHOD given_toggle_err_then_008.
+    " ARRANGE
+    insert_point( active           = zcl_apg_factory=>activation_status-custom_toggle
+                  activation_class = 'LTD_FAILING_TOGGLE' ).
+    insert_gate( seqno         = '001'
+                 handler_class = handler_class_1
+                 active        = zcl_apg_factory=>activation_status-active ).
+    zcl_apg_injector=>inject_instance( classname = 'LTD_FAILING_TOGGLE'
+                                       instance  = NEW ltd_failing_toggle( ) ).
+
+    TRY.
+        " ACT
+        zcl_apg_factory=>get_active_handlers_for_gate( point_id = point_id
+                                                       context  = context ).
+        cl_abap_unit_assert=>fail( msg = 'Failing toggle must raise zcx_apg_error' ).
+      CATCH zcx_apg_error INTO DATA(error).
+        " ASSERT
+        cl_abap_unit_assert=>assert_equals( act = error->if_t100_message~t100key
+                                            exp = zcx_apg_error=>toggle_evaluation_failed
+                                            msg = 'Failing toggle must surface textid toggle_evaluation_failed' ).
+    ENDTRY.
   ENDMETHOD.
 
 ENDCLASS.

@@ -30,8 +30,11 @@ CLASS zcl_apg_sample_execution IMPLEMENTATION.
     ENDTRY.
 
     IF journal_entry-postingdate IS NOT INITIAL.
-      INSERT VALUE #( type    = 'E'
-                      message = 'Posting date must be initial' ) INTO TABLE messages.
+      MESSAGE e010(zapg) INTO DATA(message_text).
+      INSERT VALUE #( id      = sy-msgid
+                      type    = sy-msgty
+                      number  = sy-msgno
+                      message = message_text ) INTO TABLE messages.
       RETURN.
     ENDIF.
 

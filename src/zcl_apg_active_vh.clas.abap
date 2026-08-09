@@ -70,8 +70,13 @@ CLASS zcl_apg_active_vh IMPLEMENTATION.
         language = fallback_language.
     ENDTRY.
 
-    DATA(fixed_values) = CAST cl_abap_elemdescr( cl_abap_typedescr=>describe_by_data( activation_status )
-                           )->get_ddic_fixed_values( language ).
+    DATA(element) = CAST cl_abap_elemdescr( cl_abap_typedescr=>describe_by_data( activation_status ) ).
+    DATA(fixed_values) = element->get_ddic_fixed_values( language ).
+
+    IF fixed_values IS INITIAL AND language <> fallback_language.
+      " Domain texts are maintained in English only - fall back
+      fixed_values = element->get_ddic_fixed_values( fallback_language ).
+    ENDIF.
 
     result = VALUE #( FOR fixed_value IN fixed_values
                       ( activationstatus = fixed_value-low

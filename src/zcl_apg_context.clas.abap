@@ -25,7 +25,7 @@ CLASS zcl_apg_context DEFINITION
 
     DATA entries TYPE ty_entries.
 
-    "! Dereferences the stored value and assigns it to the field symbol.
+    "! Returns the stored data reference and guarantees it is bound.
     METHODS assign_value
       IMPORTING name          TYPE string
       RETURNING VALUE(result) TYPE REF TO data

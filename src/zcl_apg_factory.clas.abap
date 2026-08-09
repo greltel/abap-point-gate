@@ -13,8 +13,6 @@ CLASS zcl_apg_factory DEFINITION
                  custom_toggle TYPE zapg_active VALUE 'C',
                END OF activation_status.
 
-    TYPES tt_handlers TYPE STANDARD TABLE OF REF TO zif_apg_handler WITH EMPTY KEY.
-
     TYPES: BEGIN OF ty_active_handler,
              handler    TYPE REF TO zif_apg_handler,
              parameters TYPE zif_apg_handler=>ty_parameters,
@@ -128,7 +126,15 @@ CLASS zcl_apg_factory IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD is_toggle_active.
-    result = zcl_apg_injector=>get_toggle( CONV #( activation_class ) )->is_active( context ).
+    DATA(toggle) = zcl_apg_injector=>get_toggle( CONV #( activation_class ) ).
+
+    TRY.
+        result = toggle->is_active( context ).
+      CATCH cx_root INTO DATA(evaluation_error). " boundary wrap: name the failing activation class
+        RAISE EXCEPTION NEW zcx_apg_error( textid     = zcx_apg_error=>toggle_evaluation_failed
+                                           class_name = |{ activation_class }|
+                                           previous   = evaluation_error ).
+    ENDTRY.
   ENDMETHOD.
 
 ENDCLASS.
