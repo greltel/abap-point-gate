@@ -68,7 +68,7 @@ build ZCL_APG_CONTEXT   ──────▶   ZCL_APG_EXECUTION (facade)
 # Prerequisites
 
 * SAP S/4HANA 2023 (or higher) OR SAP BTP ABAP Environment.
-* The framework itself uses released APIs only. The two **sample classes** reference the released CDS view `I_JournalEntry`, which exists on S/4HANA but not on BTP — on BTP, adapt the samples to an available entity.
+* The framework itself uses released APIs only. The two **sample classes** reference the released CDS view `I_JournalEntry`.
 * [Statement Compatibility](https://abaplint.app/stats/greltel/abap-point-gate/statement_compatibility)
 
 ## License
