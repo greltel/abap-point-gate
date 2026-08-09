@@ -20,19 +20,27 @@ ENDCLASS.
 CLASS lcl_class_inspector IMPLEMENTATION.
 
   METHOD is_class.
-    cl_abap_typedescr=>describe_by_name( EXPORTING p_name         = classname
-                                         RECEIVING p_descr_ref    = DATA(descriptor)
-                                         EXCEPTIONS type_not_found = 1
-                                         OTHERS         = 2 ).
+    cl_abap_typedescr=>describe_by_name(
+          EXPORTING
+            p_name         = classname
+          RECEIVING
+            p_descr_ref    = DATA(descriptor)
+          EXCEPTIONS
+            type_not_found = 1
+            OTHERS         = 2 ).
     " Fail closed: any lookup problem counts as "class does not exist"
     result = xsdbool( sy-subrc = 0 AND descriptor->kind = cl_abap_typedescr=>kind_class ).
   ENDMETHOD.
 
   METHOD implements.
-    cl_abap_typedescr=>describe_by_name( EXPORTING p_name         = classname
-                                         RECEIVING p_descr_ref    = DATA(descriptor)
-                                         EXCEPTIONS type_not_found = 1
-                                         OTHERS         = 2 ).
+    cl_abap_typedescr=>describe_by_name(
+          EXPORTING
+            p_name         = classname
+          RECEIVING
+            p_descr_ref    = DATA(descriptor)
+          EXCEPTIONS
+            type_not_found = 1
+            OTHERS         = 2 ).
     IF sy-subrc <> 0 OR descriptor->kind <> cl_abap_typedescr=>kind_class.
       " fail closed
       RETURN.

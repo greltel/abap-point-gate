@@ -1,8 +1,8 @@
 CLASS ltd_handler DEFINITION FINAL FOR TESTING.
   PUBLIC SECTION.
     INTERFACES zif_apg_handler.
-    DATA was_called          TYPE abap_bool.
-    DATA received_parameters TYPE zif_apg_handler=>ty_parameters.
+    DATA was_called          TYPE abap_bool READ-ONLY.
+    DATA received_parameters TYPE zif_apg_handler=>ty_parameters READ-ONLY.
 ENDCLASS.
 
 CLASS ltd_handler IMPLEMENTATION.
