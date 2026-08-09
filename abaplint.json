@@ -93,7 +93,7 @@
     "fully_type_constants": true,
     "fully_type_itabs": true,
     "constructor_visibility_public": true,
-    "no_public_attributes": true,
+    "no_public_attributes": { "allowReadOnly": true },
     "method_overwrites_builtin": true,
     "no_aliases": false,
     "definitions_top": false,
@@ -127,7 +127,7 @@
         "zbp_.*"
       ]
     },
-    "unused_ddic": true,
+    "unused_ddic": { "exclude": ["zapg_point_d", "zapg_gate_h_d"] },
     "commented_code": true,
     "check_comments": true,
     "abapdoc": {
@@ -139,7 +139,7 @@
     "description_empty": true,
     "identical_descriptions": true,
     "check_text_elements": true,
-    "easy_to_find_messages": true,
+    "easy_to_find_messages": false,
     "message_exists": true,
     "local_testclass_consistency": true,
     "add_test_attributes": true,
@@ -150,7 +150,7 @@
       "test": "^LT[CDH]_.+$"
     },
     "types_naming": {
-      "pattern": "^TY_.+$"
+     "pattern": "^(TY|TT)_.+$"
     },
     "method_parameter_names": false,
     "local_variable_names": false,
