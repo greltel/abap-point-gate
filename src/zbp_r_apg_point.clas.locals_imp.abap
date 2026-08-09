@@ -101,79 +101,79 @@ CLASS lhc_gate DEFINITION INHERITING FROM cl_abap_behavior_handler.
   PRIVATE SECTION.
     CONSTANTS message_class TYPE symsgid VALUE 'ZAPG'.
 
-    METHODS validateHandlerClass FOR VALIDATE ON SAVE
-      IMPORTING keys FOR Gate~validateHandlerClass.
+    METHODS validatehandlerclass FOR VALIDATE ON SAVE
+      IMPORTING keys FOR gate~validatehandlerclass.
 
-    METHODS validateActivationClass FOR VALIDATE ON SAVE
-      IMPORTING keys FOR Gate~validateActivationClass.
+    METHODS validateactivationclass FOR VALIDATE ON SAVE
+      IMPORTING keys FOR gate~validateactivationclass.
 ENDCLASS.
 
 
 CLASS lhc_gate IMPLEMENTATION.
 
-  METHOD validateHandlerClass.
+  METHOD validatehandlerclass.
     READ ENTITIES OF zr_apg_point IN LOCAL MODE
-         ENTITY Gate
-         FIELDS ( HandlerClass )
+         ENTITY gate
+         FIELDS ( handlerclass )
          WITH CORRESPONDING #( keys )
          RESULT DATA(gates).
 
     LOOP AT gates INTO DATA(gate).
-      IF gate-HandlerClass IS INITIAL.
-        APPEND VALUE #( %tky = gate-%tky ) TO failed-gate.
-        APPEND VALUE #( %tky                  = gate-%tky
+      IF gate-handlerclass IS INITIAL.
+        INSERT VALUE #( %tky = gate-%tky ) INTO TABLE failed-gate.
+        INSERT VALUE #( %tky                  = gate-%tky
                         %msg                  = new_message( id       = message_class
                                                              number   = '009'
                                                              severity = if_abap_behv_message=>severity-error )
-                        %element-handlerclass = if_abap_behv=>mk-on ) TO reported-gate.
+                        %element-handlerclass = if_abap_behv=>mk-on ) INTO TABLE reported-gate.
         CONTINUE.
       ENDIF.
 
-      IF lcl_class_inspector=>is_class( gate-HandlerClass ) = abap_false.
-        APPEND VALUE #( %tky = gate-%tky ) TO failed-gate.
-        APPEND VALUE #( %tky                  = gate-%tky
+      IF lcl_class_inspector=>is_class( gate-handlerclass ) = abap_false.
+        INSERT VALUE #( %tky = gate-%tky ) INTO TABLE failed-gate.
+        INSERT VALUE #( %tky                  = gate-%tky
                         %msg                  = new_message( id       = message_class
                                                              number   = '001'
                                                              severity = if_abap_behv_message=>severity-error
-                                                             v1       = gate-HandlerClass )
-                        %element-handlerclass = if_abap_behv=>mk-on ) TO reported-gate.
+                                                             v1       = gate-handlerclass )
+                        %element-handlerclass = if_abap_behv=>mk-on ) INTO TABLE reported-gate.
         CONTINUE.
       ENDIF.
 
-      IF lcl_class_inspector=>implements( classname = gate-HandlerClass
+      IF lcl_class_inspector=>implements( classname = gate-handlerclass
                                           interface = lcl_class_inspector=>handler_interface ) = abap_false.
-        APPEND VALUE #( %tky = gate-%tky ) TO failed-gate.
-        APPEND VALUE #( %tky                  = gate-%tky
+        INSERT VALUE #( %tky = gate-%tky ) INTO TABLE failed-gate.
+        INSERT VALUE #( %tky                  = gate-%tky
                         %msg                  = new_message( id       = message_class
                                                              number   = '002'
                                                              severity = if_abap_behv_message=>severity-error
-                                                             v1       = gate-HandlerClass
+                                                             v1       = gate-handlerclass
                                                              v2       = lcl_class_inspector=>handler_interface )
-                        %element-handlerclass = if_abap_behv=>mk-on ) TO reported-gate.
+                        %element-handlerclass = if_abap_behv=>mk-on ) INTO TABLE reported-gate.
       ENDIF.
     ENDLOOP.
   ENDMETHOD.
 
-  METHOD validateActivationClass.
+  METHOD validateactivationclass.
     READ ENTITIES OF zr_apg_point IN LOCAL MODE
-         ENTITY Gate
-         FIELDS ( Active ActivationClass )
+         ENTITY gate
+         FIELDS ( active activationclass )
          WITH CORRESPONDING #( keys )
          RESULT DATA(gates).
 
     LOOP AT gates INTO DATA(gate).
-      DATA(findings) = lcl_activation_check=>check( active           = gate-Active
-                                                    activation_class = gate-ActivationClass ).
+      DATA(findings) = lcl_activation_check=>check( active           = gate-active
+                                                    activation_class = gate-activationclass ).
 
       LOOP AT findings INTO DATA(finding).
-        APPEND VALUE #( %tky = gate-%tky ) TO failed-gate.
-        APPEND VALUE #( %tky                     = gate-%tky
+        INSERT VALUE #( %tky = gate-%tky ) INTO TABLE failed-gate.
+        INSERT VALUE #( %tky                     = gate-%tky
                         %msg                     = new_message( id       = finding-msgid
                                                                 number   = finding-msgno
                                                                 severity = if_abap_behv_message=>severity-error
                                                                 v1       = finding-msgv1
                                                                 v2       = finding-msgv2 )
-                        %element-activationclass = if_abap_behv=>mk-on ) TO reported-gate.
+                        %element-activationclass = if_abap_behv=>mk-on ) INTO TABLE reported-gate.
       ENDLOOP.
     ENDLOOP.
   ENDMETHOD.
@@ -184,10 +184,10 @@ ENDCLASS.
 CLASS lhc_point DEFINITION INHERITING FROM cl_abap_behavior_handler.
   PRIVATE SECTION.
     METHODS get_global_authorizations FOR GLOBAL AUTHORIZATION
-      IMPORTING REQUEST requested_authorizations FOR Point RESULT result.
+      IMPORTING REQUEST requested_authorizations FOR point RESULT result.
 
-    METHODS validateActivationClass FOR VALIDATE ON SAVE
-      IMPORTING keys FOR Point~validateActivationClass.
+    METHODS validateactivationclass FOR VALIDATE ON SAVE
+      IMPORTING keys FOR point~validateactivationclass.
 ENDCLASS.
 
 
@@ -198,26 +198,26 @@ CLASS lhc_point IMPLEMENTATION.
     " authorization object yet. A dedicated object + DCL is a roadmap item.
   ENDMETHOD.
 
-  METHOD validateActivationClass.
+  METHOD validateactivationclass.
     READ ENTITIES OF zr_apg_point IN LOCAL MODE
-         ENTITY Point
-         FIELDS ( Active ActivationClass )
+         ENTITY point
+         FIELDS ( active activationclass )
          WITH CORRESPONDING #( keys )
          RESULT DATA(points).
 
     LOOP AT points INTO DATA(point).
-      DATA(findings) = lcl_activation_check=>check( active           = point-Active
-                                                    activation_class = point-ActivationClass ).
+      DATA(findings) = lcl_activation_check=>check( active           = point-active
+                                                    activation_class = point-activationclass ).
 
       LOOP AT findings INTO DATA(finding).
-        APPEND VALUE #( %tky = point-%tky ) TO failed-point.
-        APPEND VALUE #( %tky                     = point-%tky
+        INSERT VALUE #( %tky = point-%tky ) INTO TABLE failed-point.
+        INSERT VALUE #( %tky                     = point-%tky
                         %msg                     = new_message( id       = finding-msgid
                                                                 number   = finding-msgno
                                                                 severity = if_abap_behv_message=>severity-error
                                                                 v1       = finding-msgv1
                                                                 v2       = finding-msgv2 )
-                        %element-activationclass = if_abap_behv=>mk-on ) TO reported-point.
+                        %element-activationclass = if_abap_behv=>mk-on ) INTO TABLE reported-point.
       ENDLOOP.
     ENDLOOP.
   ENDMETHOD.

@@ -126,7 +126,7 @@ CLASS zcl_apg_factory IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD is_toggle_active.
-    DATA(toggle) = zcl_apg_injector=>get_toggle( CONV #( activation_class ) ).
+    DATA(toggle) = zcl_apg_injector=>get_toggle( activation_class ).
 
     TRY.
         result = toggle->is_active( context ).

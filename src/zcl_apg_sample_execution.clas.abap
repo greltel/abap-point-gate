@@ -12,6 +12,12 @@ CLASS zcl_apg_sample_execution DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS context_name_journal_entry TYPE string VALUE `JOURNAL_ENTRY`.
+
+        CONSTANTS: BEGIN OF msg_posting_date_filled,
+                 id     TYPE symsgid VALUE 'ZAPG',
+                 number TYPE symsgno VALUE '010',
+                 type   TYPE bapiret2-type VALUE 'E',
+               END OF msg_posting_date_filled.
 ENDCLASS.
 
 
@@ -31,9 +37,9 @@ CLASS zcl_apg_sample_execution IMPLEMENTATION.
 
     IF journal_entry-postingdate IS NOT INITIAL.
       MESSAGE e010(zapg) INTO DATA(message_text).
-      INSERT VALUE #( id      = sy-msgid
-                      type    = sy-msgty
-                      number  = sy-msgno
+      INSERT VALUE #( id      = msg_posting_date_filled-id
+                      type    = msg_posting_date_filled-type
+                      number  = msg_posting_date_filled-number
                       message = message_text ) INTO TABLE messages.
       RETURN.
     ENDIF.

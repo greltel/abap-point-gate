@@ -92,17 +92,20 @@ CLASS ltc_execution IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD inject_gate.
+    DATA(point_toggle) = COND zapg_activation_class(
+      WHEN point_active = zcl_apg_factory=>activation_status-custom_toggle THEN toggle_class ).
+    DATA(gate_toggle) = COND zapg_activation_class(
+      WHEN gate_active = zcl_apg_factory=>activation_status-custom_toggle THEN toggle_class ).
+
     zcl_apg_injector=>inject_configurations(
         point_id       = point_id
         configurations = VALUE #( ( point_id               = point_id
                                     point_active           = point_active
-                                    point_activation_class = COND #( WHEN point_active = zcl_apg_factory=>activation_status-custom_toggle
-                                                                     THEN toggle_class )
+                                    point_activation_class = point_toggle
                                     seqno                  = '001'
                                     handler_class          = handler_class
                                     gate_active            = gate_active
-                                    gate_activation_class  = COND #( WHEN gate_active = zcl_apg_factory=>activation_status-custom_toggle
-                                                                     THEN toggle_class ) ) ) ).
+                                    gate_activation_class  = gate_toggle ) ) ).
   ENDMETHOD.
 
   METHOD given_active_gate_then_runs.
