@@ -60,7 +60,8 @@ CLASS zcl_apg_context IMPLEMENTATION.
     ASSIGN value_ref->* TO FIELD-SYMBOL(<value>).
     TRY.
         result = |{ <value> }|.
-      CATCH cx_root INTO DATA(conversion_error). " boundary wrap: any conversion failure becomes a framework error
+      " boundary wrap: any conversion failure becomes a framework error
+      CATCH cx_root INTO DATA(conversion_error).
         RAISE EXCEPTION NEW zcx_apg_error( textid       = zcx_apg_error=>context_conversion_failed
                                            context_name = name
                                            previous     = conversion_error ).

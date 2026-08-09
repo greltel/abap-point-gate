@@ -130,7 +130,8 @@ CLASS zcl_apg_factory IMPLEMENTATION.
 
     TRY.
         result = toggle->is_active( context ).
-      CATCH cx_root INTO DATA(evaluation_error). " boundary wrap: name the failing activation class
+      " boundary wrap: name the failing activation class
+      CATCH cx_root INTO DATA(evaluation_error).
         RAISE EXCEPTION NEW zcx_apg_error( textid     = zcx_apg_error=>toggle_evaluation_failed
                                            class_name = |{ activation_class }|
                                            previous   = evaluation_error ).

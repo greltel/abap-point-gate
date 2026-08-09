@@ -9,7 +9,6 @@ CLASS zcl_apg_execution DEFINITION
 
   PUBLIC SECTION.
     TYPES tt_messages TYPE zif_apg_handler=>tt_messages.
-    TYPES tt_bapiret2 TYPE zif_apg_handler=>tt_messages. " compatibility alias for v1 consumers
 
     "! Executes all active handlers of the point in sequence order.
     "! @parameter point_id | Point to execute
@@ -43,7 +42,8 @@ CLASS zcl_apg_execution IMPLEMENTATION.
           active_handler-handler->execute( EXPORTING context    = context
                                                      parameters = active_handler-parameters
                                            CHANGING  messages   = messages ).
-        CATCH cx_root INTO DATA(error). " intentional: a broken handler must not abort the host transaction
+        " intentional: a broken handler must not abort the host transaction
+        CATCH cx_root INTO DATA(error).
           INSERT as_error_message( error ) INTO TABLE messages.
       ENDTRY.
     ENDLOOP.

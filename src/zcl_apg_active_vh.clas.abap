@@ -10,10 +10,15 @@ CLASS zcl_apg_active_vh DEFINITION
 
   PROTECTED SECTION.
   PRIVATE SECTION.
+    CONSTANTS fallback_language TYPE spras VALUE 'E'.
+
     TYPES tt_values TYPE STANDARD TABLE OF zi_apg_active_vh WITH EMPTY KEY.
 
     METHODS read_domain_values
       RETURNING VALUE(result) TYPE tt_values.
+
+    METHODS determine_language
+      RETURNING VALUE(result) TYPE spras.
 ENDCLASS.
 
 
@@ -58,18 +63,18 @@ CLASS zcl_apg_active_vh IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
-  METHOD read_domain_values.
-    CONSTANTS fallback_language TYPE sylangu VALUE 'E'.
-
-    DATA activation_status TYPE zapg_active.
-    DATA language          TYPE sylangu.
-
+  METHOD determine_language.
     TRY.
-        language = cl_abap_context_info=>get_user_language_abap_format( ).
+        result = cl_abap_context_info=>get_user_language_abap_format( ).
       CATCH cx_abap_context_info_error.
-        language = fallback_language.
+        result = fallback_language.
     ENDTRY.
+  ENDMETHOD.
 
+  METHOD read_domain_values.
+    DATA activation_status TYPE zapg_active.
+
+    DATA(language) = determine_language( ).
     DATA(element) = CAST cl_abap_elemdescr( cl_abap_typedescr=>describe_by_data( activation_status ) ).
     DATA(fixed_values) = element->get_ddic_fixed_values( language ).
 
