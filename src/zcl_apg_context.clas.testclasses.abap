@@ -1,48 +1,109 @@
-*"* use this source file for your ABAP unit test classes
-CLASS ltc_context_test DEFINITION FOR TESTING
-  DURATION SHORT
-  RISK LEVEL HARMLESS.
+CLASS ltc_context DEFINITION
+  FINAL FOR TESTING
+  RISK LEVEL HARMLESS
+  DURATION SHORT.
 
   PRIVATE SECTION.
-    DATA mo_cut TYPE REF TO zif_apg_context.
+    DATA cut TYPE REF TO zif_apg_context.
 
-    METHODS: setup,
-             test_string_storage FOR TESTING,
-             test_date_conversion FOR TESTING,
-             test_missing_data FOR TESTING.
+    METHODS setup.
+    METHODS given_string_then_returned  FOR TESTING RAISING zcx_apg_error.
+    METHODS given_date_then_returned    FOR TESTING RAISING zcx_apg_error.
+    METHODS given_int_then_returned     FOR TESTING RAISING zcx_apg_error.
+    METHODS given_set_twice_then_latest FOR TESTING RAISING zcx_apg_error.
+    METHODS given_value_then_has_data   FOR TESTING.
+    METHODS given_missing_then_raises   FOR TESTING.
 ENDCLASS.
 
-CLASS ltc_context_test IMPLEMENTATION.
+
+CLASS ltc_context IMPLEMENTATION.
 
   METHOD setup.
-    mo_cut = NEW zcl_apg_context( ).
+    cut = NEW zcl_apg_context( ).
   ENDMETHOD.
 
-  METHOD test_string_storage.
-    mo_cut->set_data( i_name = 'TEST' i_value = NEW string( 'Hello' ) ).
+  METHOD given_string_then_returned.
+    " ARRANGE
+    cut->set_data( name  = `TEXT`
+                   value = NEW string( `Hello` ) ).
 
-    cl_abap_unit_assert=>assert_equals(
-      exp = 'Hello'
-      act = mo_cut->get_string( 'TEST' )
-      msg = 'No string coming from context' ).
+    " ACT
+    DATA(text) = cut->get_string( `TEXT` ).
+
+    " ASSERT
+    cl_abap_unit_assert=>assert_equals( act = text
+                                        exp = `Hello`
+                                        msg = 'Stored string was not returned unchanged' ).
   ENDMETHOD.
 
-  METHOD test_date_conversion.
-    DATA(lv_date) = cl_abap_context_info=>get_system_date( ).
-    mo_cut->set_data( i_name = 'MYDATE' i_value = REF #( lv_date ) ).
+  METHOD given_date_then_returned.
+    " ARRANGE
+    DATA(today) = cl_abap_context_info=>get_system_date( ).
+    cut->set_data( name  = `DATE`
+                   value = REF #( today ) ).
 
-    cl_abap_unit_assert=>assert_equals(
-      exp = cl_abap_context_info=>get_system_date( )
-      act = mo_cut->get_date( 'MYDATE' )
-      msg = 'Date should be returned' ).
+    " ACT
+    DATA(stored_date) = cut->get_date( `DATE` ).
+
+    " ASSERT
+    cl_abap_unit_assert=>assert_equals( act = stored_date
+                                        exp = today
+                                        msg = 'Stored date was not returned unchanged' ).
   ENDMETHOD.
 
-  METHOD test_missing_data.
+  METHOD given_int_then_returned.
+    " ARRANGE
+    cut->set_data( name  = `NUMBER`
+                   value = NEW i( 42 ) ).
 
-    cl_abap_unit_assert=>assert_initial(
-      act = mo_cut->get_string( 'NOT_EXISTS' )
-      msg = 'If no data exists,initial should be returned' ).
+    " ACT
+    DATA(number) = cut->get_integer( `NUMBER` ).
 
+    " ASSERT
+    cl_abap_unit_assert=>assert_equals( act = number
+                                        exp = 42
+                                        msg = 'Stored integer was not returned unchanged' ).
+  ENDMETHOD.
+
+  METHOD given_set_twice_then_latest.
+    " ARRANGE
+    cut->set_data( name  = `TEXT`
+                   value = NEW string( `First` ) ).
+    cut->set_data( name  = `TEXT`
+                   value = NEW string( `Second` ) ).
+
+    " ACT
+    DATA(text) = cut->get_string( `TEXT` ).
+
+    " ASSERT
+    cl_abap_unit_assert=>assert_equals( act = text
+                                        exp = `Second`
+                                        msg = 'Overwriting a name must keep the latest value' ).
+  ENDMETHOD.
+
+  METHOD given_value_then_has_data.
+    " ARRANGE
+    cut->set_data( name  = `TEXT`
+                   value = NEW string( `Hello` ) ).
+
+    " ACT & ASSERT
+    cl_abap_unit_assert=>assert_true( act = cut->has_data( `TEXT` )
+                                      msg = 'has_data must be true for a stored name' ).
+    cl_abap_unit_assert=>assert_false( act = cut->has_data( `MISSING` )
+                                       msg = 'has_data must be false for an unknown name' ).
+  ENDMETHOD.
+
+  METHOD given_missing_then_raises.
+    TRY.
+        " ACT
+        cut->get_string( `MISSING` ).
+        cl_abap_unit_assert=>fail( msg = 'Reading a missing name must raise zcx_apg_error' ).
+      CATCH zcx_apg_error INTO DATA(error).
+        " ASSERT
+        cl_abap_unit_assert=>assert_equals( act = error->if_t100_message~t100key
+                                            exp = zcx_apg_error=>context_value_missing
+                                            msg = 'Missing value must raise textid context_value_missing' ).
+    ENDTRY.
   ENDMETHOD.
 
 ENDCLASS.

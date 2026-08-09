@@ -1,146 +1,134 @@
+"! <p class="shorttext synchronized" lang="EN">ABAP Point Gate factory</p>
+"! Resolves the active handler instances of a point by evaluating the
+"! hierarchical activation model (point level first, then gate level).
 CLASS zcl_apg_factory DEFINITION
   PUBLIC
   FINAL
-  CREATE PUBLIC .
+  CREATE PRIVATE.
 
   PUBLIC SECTION.
+    CONSTANTS: BEGIN OF activation_status,
+                 active        TYPE zapg_active VALUE 'X',
+                 inactive      TYPE zapg_active VALUE '-',
+                 custom_toggle TYPE zapg_active VALUE 'C',
+               END OF activation_status.
 
-    TYPES: BEGIN OF ty_point_gate_handle,
-             point         TYPE zapg_point,
-             gate          TYPE zapg_gate_handle,
-             deletion_mark TYPE abap_bool,
-           END OF ty_point_gate_handle,
+    TYPES tt_handlers TYPE STANDARD TABLE OF REF TO zif_apg_handler WITH EMPTY KEY.
 
-           tt_point_gate_handle TYPE STANDARD TABLE OF ty_point_gate_handle WITH EMPTY KEY.
+    TYPES: BEGIN OF ty_active_handler,
+             handler    TYPE REF TO zif_apg_handler,
+             parameters TYPE zif_apg_handler=>ty_parameters,
+           END OF ty_active_handler,
+           tt_active_handlers TYPE STANDARD TABLE OF ty_active_handler WITH EMPTY KEY.
 
-
-    TYPES:
-      tt_apg_handler TYPE STANDARD TABLE OF REF TO zif_apg_handler WITH EMPTY KEY .
-
+    "! Returns the handlers of all active gates of the point, in sequence
+    "! order. Returns an empty table when the point itself is not active.
+    "! @parameter point_id | Point to resolve
+    "! @parameter context  | Shared execution context (passed to toggles)
+    "! @parameter result   | Active handler instances in execution order
+    "! @raising zcx_apg_error | Toggle evaluation or instantiation failed
     CLASS-METHODS get_active_handlers_for_gate
-      IMPORTING
-        !i_point_id       TYPE zapg_point_id
-        !i_context        TYPE REF TO zif_apg_context
-      RETURNING
-        VALUE(r_handlers) TYPE tt_apg_handler
-      RAISING
-        zcx_apg_error .
-    CLASS-METHODS inject_instance
-      IMPORTING
-        !i_classname TYPE sxco_ao_object_name
-        !i_instance  TYPE REF TO object .
+      IMPORTING point_id      TYPE zapg_point_id
+                context       TYPE REF TO zif_apg_context
+      RETURNING VALUE(result) TYPE tt_active_handlers
+      RAISING   zcx_apg_error.
+
   PROTECTED SECTION.
-private section.
+  PRIVATE SECTION.
+    CLASS-METHODS read_configurations
+      IMPORTING point_id      TYPE zapg_point_id
+      RETURNING VALUE(result) TYPE zcl_apg_injector=>tt_configurations.
 
-  types:
-    BEGIN OF ty_injection,
-             classname TYPE sxco_ao_object_name,
-             instance  TYPE REF TO object,
-           END OF ty_injection .
+    CLASS-METHODS is_point_active
+      IMPORTING configuration TYPE zcl_apg_injector=>ty_configuration
+                context       TYPE REF TO zif_apg_context
+      RETURNING VALUE(result) TYPE abap_bool
+      RAISING   zcx_apg_error.
 
-  class-data:
-    mt_injections TYPE HASHED TABLE OF ty_injection WITH UNIQUE KEY classname .
+    CLASS-METHODS is_gate_active
+      IMPORTING configuration TYPE zcl_apg_injector=>ty_configuration
+                context       TYPE REF TO zif_apg_context
+      RETURNING VALUE(result) TYPE abap_bool
+      RAISING   zcx_apg_error.
 
-  class-methods CREATE_HANDLER
-    importing
-      !I_CLASSNAME type SXCO_AO_OBJECT_NAME
-    returning
-      value(R_HANDLER) type ref to ZIF_APG_HANDLER
-    raising
-      ZCX_APG_ERROR .
-  class-methods CUSTOM_TOGGLE_IS_ACTIVE
-    importing
-      !I_ACTIVATION_CLASS type ZAPG_ACTIVATION_CLASS
-      !I_CONTEXT type ref to ZIF_APG_CONTEXT
-    returning
-      value(R_IS_ACTIVE) type ABAP_BOOLEAN
-    raising
-      ZCX_APG_ERROR .
+    CLASS-METHODS is_toggle_active
+      IMPORTING activation_class TYPE zapg_activation_class
+                context          TYPE REF TO zif_apg_context
+      RETURNING VALUE(result)    TYPE abap_bool
+      RAISING   zcx_apg_error.
 ENDCLASS.
 
 
-
-CLASS ZCL_APG_FACTORY IMPLEMENTATION.
-
-
-  METHOD create_handler.
-
-    CLEAR r_handler.
-
-    r_handler = zcl_apg_injector=>get_handler( i_classname ).
-
-  ENDMETHOD.
-
-
-  METHOD custom_toggle_is_active.
-
-    CLEAR r_is_active.
-
-    DATA(lo_toggle) = zcl_apg_injector=>get_toggle( i_activation_class ).
-    r_is_active = lo_toggle->is_active( i_context ).
-
-  ENDMETHOD.
-
+CLASS zcl_apg_factory IMPLEMENTATION.
 
   METHOD get_active_handlers_for_gate.
+    DATA(configurations) = zcl_apg_injector=>get_configurations( point_id ).
 
-    CONSTANTS c_custom_act_toggle TYPE zapg_active VALUE 'C'.
-
-    DATA lr_active TYPE RANGE OF zapg_active.
-    lr_active = VALUE #( ( sign = 'I' option = 'EQ' low = abap_true )
-                         ( sign = 'I' option = 'EQ' low = c_custom_act_toggle ) ).
-
-    DATA lt_point_gate_handle TYPE tt_point_gate_handle.
-
-    zcl_apg_injector=>get_configuration(
-      EXPORTING i_point_id = i_point_id
-      IMPORTING e_config   = lt_point_gate_handle ).
-
-
-    IF lt_point_gate_handle IS INITIAL."NO MOCK EXISTS
-
-      SELECT FROM zapg_gate_handle AS gate
-          INNER JOIN zapg_point AS point ON point~point_id EQ gate~point_id
-          FIELDS point~*     AS point,
-                 gate~*      AS gate,
-                 @abap_false AS deletion_mark
-          WHERE   gate~point_id EQ @i_point_id
-            AND ( gate~active   IN @lr_active )
-           AND  ( point~active  IN @lr_active )
-        ORDER BY gate~seqno ASCENDING
-        INTO TABLE @lt_point_gate_handle.
-
+    IF configurations IS INITIAL.
+      configurations = read_configurations( point_id ).
     ENDIF.
 
-    LOOP AT lt_point_gate_handle INTO DATA(ls_cfg).
+    IF configurations IS INITIAL.
+      RETURN.
+    ENDIF.
 
-      IF ls_cfg-point-active EQ c_custom_act_toggle.
-        IF zcl_apg_injector=>get_toggle( ls_cfg-point-activation_class )->is_active( i_context ) EQ abap_false.
-          CONTINUE.
-        ENDIF.
+    " Point-level activation is identical on every row - evaluate once
+    IF is_point_active( configuration = configurations[ 1 ]
+                        context       = context ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    LOOP AT configurations INTO DATA(configuration).
+      IF is_gate_active( configuration = configuration
+                         context       = context ) = abap_true.
+        INSERT VALUE #( handler    = zcl_apg_injector=>get_handler( configuration-handler_class )
+                        parameters = VALUE #( param_1 = configuration-param_1
+                                              param_2 = configuration-param_2 ) ) INTO TABLE result.
       ENDIF.
-
-      IF ls_cfg-gate-active EQ abap_true.
-
-        APPEND zcl_apg_injector=>get_handler( ls_cfg-gate-handler_class ) TO r_handlers.
-
-      ELSEIF ls_cfg-gate-active EQ c_custom_act_toggle.
-
-        IF zcl_apg_injector=>get_toggle( ls_cfg-gate-activation_class )->is_active( i_context ) EQ abap_true.
-          APPEND zcl_apg_injector=>get_handler( ls_cfg-gate-handler_class ) TO r_handlers.
-        ENDIF.
-
-      ENDIF.
-
     ENDLOOP.
-
   ENDMETHOD.
 
-
-  METHOD inject_instance.
-
-    DELETE mt_injections WHERE classname = i_classname.
-    INSERT VALUE #( classname = i_classname instance = i_instance ) INTO TABLE mt_injections.
-
+  METHOD read_configurations.
+    SELECT FROM zapg_gate_handle AS gate
+           INNER JOIN zapg_point AS point ON point~point_id = gate~point_id
+      FIELDS point~point_id,
+             point~active           AS point_active,
+             point~activation_class AS point_activation_class,
+             gate~seqno,
+             gate~handler_class,
+             gate~active            AS gate_active,
+             gate~activation_class  AS gate_activation_class,
+             gate~param_1,
+             gate~param_2
+      WHERE gate~point_id  = @point_id
+        AND point~active  IN ( @activation_status-active, @activation_status-custom_toggle )
+        AND gate~active   IN ( @activation_status-active, @activation_status-custom_toggle )
+      ORDER BY gate~seqno ASCENDING
+      INTO TABLE @result.
   ENDMETHOD.
+
+  METHOD is_point_active.
+    result = SWITCH #( configuration-point_active
+               WHEN activation_status-active
+                 THEN abap_true
+               WHEN activation_status-custom_toggle
+                 THEN is_toggle_active( activation_class = configuration-point_activation_class
+                                        context          = context )
+               ELSE abap_false ).
+  ENDMETHOD.
+
+  METHOD is_gate_active.
+    result = SWITCH #( configuration-gate_active
+               WHEN activation_status-active
+                 THEN abap_true
+               WHEN activation_status-custom_toggle
+                 THEN is_toggle_active( activation_class = configuration-gate_activation_class
+                                        context          = context )
+               ELSE abap_false ).
+  ENDMETHOD.
+
+  METHOD is_toggle_active.
+    result = zcl_apg_injector=>get_toggle( CONV #( activation_class ) )->is_active( context ).
+  ENDMETHOD.
+
 ENDCLASS.

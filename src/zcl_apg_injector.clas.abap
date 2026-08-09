@@ -1,128 +1,168 @@
+"! <p class="shorttext synchronized" lang="EN">ABAP Point Gate injector</p>
+"! Dependency injection registry of the framework. Resolves handler and
+"! toggle instances (test double or dynamic creation) and stores injected
+"! configurations. Static state is intentional: this is cross-cutting
+"! DI infrastructure, not a business class.
 CLASS zcl_apg_injector DEFINITION
-  PUBLIC FINAL
+  PUBLIC
+  FINAL
   CREATE PRIVATE.
 
   PUBLIC SECTION.
+    TYPES: BEGIN OF ty_configuration,
+             point_id               TYPE zapg_point_id,
+             point_active           TYPE zapg_active,
+             point_activation_class TYPE zapg_activation_class,
+             seqno                  TYPE zapg_seqno,
+             handler_class          TYPE zapg_handler_class,
+             gate_active            TYPE zapg_active,
+             gate_activation_class  TYPE zapg_activation_class,
+             param_1                TYPE zapg_parameter,
+             param_2                TYPE zapg_parameter,
+           END OF ty_configuration,
+           tt_configurations TYPE STANDARD TABLE OF ty_configuration WITH EMPTY KEY.
+
+    "! Returns a handler instance: an injected double or a new instance.
+    "! @parameter classname | Name of the handler class
+    "! @parameter result    | Handler instance
+    "! @raising zcx_apg_error | Class not creatable or wrong interface
     CLASS-METHODS get_handler
-      IMPORTING i_classname      TYPE ABAP_CLASSNAME
-      RETURNING VALUE(r_handler) TYPE REF TO zif_apg_handler
+      IMPORTING classname     TYPE abap_classname
+      RETURNING VALUE(result) TYPE REF TO zif_apg_handler
       RAISING   zcx_apg_error.
 
+    "! Returns a toggle instance: an injected double or a new instance.
+    "! @parameter classname | Name of the activation class
+    "! @parameter result    | Toggle instance
+    "! @raising zcx_apg_error | Class not creatable or wrong interface
     CLASS-METHODS get_toggle
-      IMPORTING i_classname     TYPE ABAP_CLASSNAME
-      RETURNING VALUE(r_toggle) TYPE REF TO zif_apg_activation_toggle
+      IMPORTING classname     TYPE abap_classname
+      RETURNING VALUE(result) TYPE REF TO zif_apg_activation_toggle
       RAISING   zcx_apg_error.
 
+    "! Registers a test double under a class name.
+    "! @parameter classname | Class name the double stands in for
+    "! @parameter instance  | Test double instance
     CLASS-METHODS inject_instance
-      IMPORTING i_classname TYPE ABAP_CLASSNAME
-                i_instance  TYPE REF TO object.
+      IMPORTING classname TYPE abap_classname
+                instance  TYPE REF TO object.
 
+    "! Registers a mock configuration for a point.
+    "! @parameter point_id       | Point the configuration belongs to
+    "! @parameter configurations | Configuration rows for the point
+    CLASS-METHODS inject_configurations
+      IMPORTING point_id       TYPE zapg_point_id
+                configurations TYPE tt_configurations.
+
+    "! Returns the injected configuration of a point (empty if none).
+    "! @parameter point_id | Point to look up
+    "! @parameter result   | Injected configuration rows
+    CLASS-METHODS get_configurations
+      IMPORTING point_id      TYPE zapg_point_id
+      RETURNING VALUE(result) TYPE tt_configurations.
+
+    "! Removes all injected doubles and configurations.
     CLASS-METHODS clear.
 
-    CLASS-METHODS inject_configuration
-      IMPORTING i_point_id TYPE zapg_point_id
-                i_config   TYPE ANY TABLE.
-
-    CLASS-METHODS get_configuration
-      IMPORTING i_point_id TYPE zapg_point_id
-      EXPORTING e_config   TYPE ANY TABLE.
-
+  PROTECTED SECTION.
   PRIVATE SECTION.
-    TYPES: BEGIN OF ty_mock_config,
-             point_id TYPE zapg_point_id,
-             data     TYPE REF TO data,
-           END OF ty_mock_config.
-
-    TYPES ty_mock_configs TYPE HASHED TABLE OF ty_mock_config WITH UNIQUE KEY point_id.
-
-    CLASS-DATA mt_mock_configs TYPE ty_mock_configs.
+    CONSTANTS handler_interface_name TYPE string VALUE `ZIF_APG_HANDLER`.
+    CONSTANTS toggle_interface_name  TYPE string VALUE `ZIF_APG_ACTIVATION_TOGGLE`.
 
     TYPES: BEGIN OF ty_mock,
              classname TYPE abap_classname,
              instance  TYPE REF TO object,
-           END OF ty_mock.
+           END OF ty_mock,
+           ty_mocks TYPE HASHED TABLE OF ty_mock WITH UNIQUE KEY classname.
 
-    CLASS-DATA mt_mocks TYPE HASHED TABLE OF ty_mock WITH UNIQUE KEY classname.
+    TYPES: BEGIN OF ty_mock_configuration,
+             point_id       TYPE zapg_point_id,
+             configurations TYPE tt_configurations,
+           END OF ty_mock_configuration,
+           ty_mock_configurations TYPE HASHED TABLE OF ty_mock_configuration WITH UNIQUE KEY point_id.
 
-    CLASS-METHODS get_instance
-      IMPORTING i_classname       TYPE ABAP_CLASSNAME
-      RETURNING VALUE(r_instance) TYPE REF TO object.
+    CLASS-DATA mocks               TYPE ty_mocks.
+    CLASS-DATA mock_configurations TYPE ty_mock_configurations.
 
+    CLASS-METHODS get_mock
+      IMPORTING classname     TYPE abap_classname
+      RETURNING VALUE(result) TYPE REF TO object.
 ENDCLASS.
 
 
 CLASS zcl_apg_injector IMPLEMENTATION.
-  METHOD clear.
-    CLEAR mt_mocks.
-  ENDMETHOD.
-
-  METHOD get_configuration.
-    CLEAR e_config.
-
-    ASSIGN mt_mock_configs[ point_id = i_point_id ] TO FIELD-SYMBOL(<ls_mock>).
-    IF syst-subrc IS INITIAL.
-
-      ASSIGN <ls_mock>-data->* TO FIELD-SYMBOL(<lt_data>).
-
-      TRY.
-          e_config = <lt_data>.
-        CATCH cx_sy_move_cast_error.
-          CLEAR e_config.
-      ENDTRY.
-
-    ENDIF.
-  ENDMETHOD.
 
   METHOD get_handler.
-    " Check for Mock existence
-    DATA(lo_mock) = get_instance( i_classname ).
-    IF lo_mock IS BOUND.
-      r_handler = CAST #( lo_mock ).
+    DATA(mock) = get_mock( classname ).
+    IF mock IS BOUND.
+      TRY.
+          result = CAST #( mock ).
+        CATCH cx_sy_move_cast_error INTO DATA(cast_error).
+          RAISE EXCEPTION NEW zcx_apg_error( textid         = zcx_apg_error=>interface_not_implemented
+                                             class_name     = |{ classname }|
+                                             interface_name = handler_interface_name
+                                             previous       = cast_error ).
+      ENDTRY.
       RETURN.
     ENDIF.
 
-    " Creation of Production Code
     TRY.
-        CREATE OBJECT r_handler TYPE (i_classname).
-      CATCH cx_sy_create_object_error.
-        RAISE EXCEPTION NEW zcx_apg_error( ).
+        " Dynamic instantiation: NEW cannot take a runtime type name
+        CREATE OBJECT result TYPE (classname).
+      CATCH cx_sy_create_object_error INTO DATA(create_error).
+        RAISE EXCEPTION NEW zcx_apg_error( textid     = zcx_apg_error=>instantiation_failed
+                                           class_name = |{ classname }|
+                                           previous   = create_error ).
     ENDTRY.
-  ENDMETHOD.
-
-  METHOD get_instance.
-    r_instance = VALUE #( mt_mocks[ classname = i_classname ]-instance OPTIONAL ).
   ENDMETHOD.
 
   METHOD get_toggle.
-    DATA(lo_mock) = get_instance( i_classname ).
-    IF lo_mock IS BOUND.
-      r_toggle = CAST #( lo_mock ).
+    DATA(mock) = get_mock( classname ).
+    IF mock IS BOUND.
+      TRY.
+          result = CAST #( mock ).
+        CATCH cx_sy_move_cast_error INTO DATA(cast_error).
+          RAISE EXCEPTION NEW zcx_apg_error( textid         = zcx_apg_error=>interface_not_implemented
+                                             class_name     = |{ classname }|
+                                             interface_name = toggle_interface_name
+                                             previous       = cast_error ).
+      ENDTRY.
       RETURN.
     ENDIF.
 
     TRY.
-        CREATE OBJECT r_toggle TYPE (i_classname).
-      CATCH cx_sy_create_object_error.
-        RAISE EXCEPTION NEW zcx_apg_error( ).
+        " Dynamic instantiation: NEW cannot take a runtime type name
+        CREATE OBJECT result TYPE (classname).
+      CATCH cx_sy_create_object_error INTO DATA(create_error).
+        RAISE EXCEPTION NEW zcx_apg_error( textid     = zcx_apg_error=>instantiation_failed
+                                           class_name = |{ classname }|
+                                           previous   = create_error ).
     ENDTRY.
   ENDMETHOD.
 
-  METHOD inject_configuration.
-    DATA lr_data TYPE REF TO data.
-
-    " Deep Copy
-    CREATE DATA lr_data LIKE i_config.
-    ASSIGN lr_data->* TO FIELD-SYMBOL(<lt_target>).
-    <lt_target> = i_config.
-
-    DELETE mt_mock_configs WHERE point_id = i_point_id.
-    INSERT VALUE #( point_id = i_point_id
-                    data     = lr_data ) INTO TABLE mt_mock_configs.
-  ENDMETHOD.
-
   METHOD inject_instance.
-    DELETE mt_mocks WHERE classname = i_classname.
-    INSERT VALUE #( classname = i_classname
-                    instance  = i_instance ) INTO TABLE mt_mocks.
+    DELETE TABLE mocks WITH TABLE KEY classname = classname.
+    INSERT VALUE #( classname = classname
+                    instance  = instance ) INTO TABLE mocks.
   ENDMETHOD.
+
+  METHOD inject_configurations.
+    DELETE TABLE mock_configurations WITH TABLE KEY point_id = point_id.
+    INSERT VALUE #( point_id       = point_id
+                    configurations = configurations ) INTO TABLE mock_configurations.
+  ENDMETHOD.
+
+  METHOD get_configurations.
+    result = VALUE #( mock_configurations[ point_id = point_id ]-configurations OPTIONAL ).
+  ENDMETHOD.
+
+  METHOD clear.
+    CLEAR: mocks,
+           mock_configurations.
+  ENDMETHOD.
+
+  METHOD get_mock.
+    result = VALUE #( mocks[ classname = classname ]-instance OPTIONAL ).
+  ENDMETHOD.
+
 ENDCLASS.

@@ -3,9 +3,9 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOCLASS>
-    <CLSNAME>ZCL_APG_ACT_TOGGLE_SAMPLE</CLSNAME>
+    <CLSNAME>ZCL_APG_ACTIVE_VH</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>ABAP Point Gate toggle sample</DESCRIPT>
+    <DESCRIPT>Activation status value help</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

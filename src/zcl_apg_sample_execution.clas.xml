@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_APG_SAMPLE_EXECUTION</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>ABAP Point Gate Sample Execution</DESCRIPT>
+    <DESCRIPT>ABAP Point Gate handler sample</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

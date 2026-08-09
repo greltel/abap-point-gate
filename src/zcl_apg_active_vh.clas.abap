@@ -1,6 +1,6 @@
-"! <p class="shorttext synchronized" lang="EN">Point type value help</p>
-"! Query provider that serves the fixed values of domain ZAPG_POINT_TYPE.
-CLASS zcl_apg_point_type_vh DEFINITION
+"! <p class="shorttext synchronized" lang="EN">Activation status value help</p>
+"! Query provider that serves the fixed values of domain ZAPG_ACTIVE.
+CLASS zcl_apg_active_vh DEFINITION
   PUBLIC
   FINAL
   CREATE PUBLIC.
@@ -10,24 +10,25 @@ CLASS zcl_apg_point_type_vh DEFINITION
 
   PROTECTED SECTION.
   PRIVATE SECTION.
-    TYPES tt_values TYPE STANDARD TABLE OF zi_apg_point_type_vh WITH EMPTY KEY.
+    TYPES tt_values TYPE STANDARD TABLE OF zi_apg_active_vh WITH EMPTY KEY.
 
     METHODS read_domain_values
       RETURNING VALUE(result) TYPE tt_values.
 ENDCLASS.
 
 
-CLASS zcl_apg_point_type_vh IMPLEMENTATION.
+CLASS zcl_apg_active_vh IMPLEMENTATION.
 
   METHOD if_rap_query_provider~select.
     io_request->get_sort_elements( ).
     io_request->get_paging( ).
+
     DATA(values) = read_domain_values( ).
 
     TRY.
         LOOP AT io_request->get_filter( )->get_as_ranges( ) INTO DATA(filter).
-          IF to_upper( filter-name ) = 'POINTTYPE'.
-            DELETE values WHERE pointtype NOT IN filter-range.
+          IF to_upper( filter-name ) = 'ACTIVATIONSTATUS'.
+            DELETE values WHERE activationstatus NOT IN filter-range.
           ENDIF.
         ENDLOOP.
       CATCH cx_rap_query_filter_no_range.
@@ -60,8 +61,8 @@ CLASS zcl_apg_point_type_vh IMPLEMENTATION.
   METHOD read_domain_values.
     CONSTANTS fallback_language TYPE sylangu VALUE 'E'.
 
-    DATA point_type TYPE zapg_point_type.
-    DATA language   TYPE sylangu.
+    DATA activation_status TYPE zapg_active.
+    DATA language          TYPE sylangu.
 
     TRY.
         language = cl_abap_context_info=>get_user_language_abap_format( ).
@@ -69,12 +70,12 @@ CLASS zcl_apg_point_type_vh IMPLEMENTATION.
         language = fallback_language.
     ENDTRY.
 
-    DATA(fixed_values) = CAST cl_abap_elemdescr( cl_abap_typedescr=>describe_by_data( point_type )
+    DATA(fixed_values) = CAST cl_abap_elemdescr( cl_abap_typedescr=>describe_by_data( activation_status )
                            )->get_ddic_fixed_values( language ).
 
     result = VALUE #( FOR fixed_value IN fixed_values
-                      ( pointtype   = fixed_value-low
-                        description = fixed_value-ddtext ) ).
+                      ( activationstatus = fixed_value-low
+                        description      = fixed_value-ddtext ) ).
   ENDMETHOD.
 
 ENDCLASS.

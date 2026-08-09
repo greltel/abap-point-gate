@@ -1,11 +1,8 @@
 @Metadata.layer: #CUSTOMER
 
-@UI.presentationVariant: [{
-  sortOrder: [{ by: 'SeqNo', direction: #ASC }]
-}]
+@UI.presentationVariant: [{ sortOrder: [{ by: 'SeqNo', direction: #ASC }] }]
 
 annotate view ZC_APG_GateHandle with
-
 {
   @UI.facet: [ { id: 'idIdentification', type: #IDENTIFICATION_REFERENCE, label: 'Handler Details', position: 10 } ]
   @UI.identification: [ { position: 10 } ]
@@ -15,13 +12,12 @@ annotate view ZC_APG_GateHandle with
 
   @UI.identification: [ { position: 20 } ]
   @UI.lineItem: [ { position: 20 } ]
-  @UI.selectionField: [ { position: 20 } ]
   SeqNo;
 
+  @Consumption.valueHelpDefinition: [ { entity: { name: 'ZI_APG_ACTIVE_VH', element: 'ActivationStatus' } } ]
   @UI.identification: [ { position: 30, criticality: 'ActiveCriticality', criticalityRepresentation: #ONLY_ICON } ]
   @UI.lineItem: [ { position: 30, criticality: 'ActiveCriticality', criticalityRepresentation: #ONLY_ICON } ]
   @UI.selectionField: [ { position: 30 } ]
-  @Consumption.valueHelpDefinition: [{ entity: { name: 'ZI_APG_STATUS_VH', element: 'StatusCode' } }]
   @UI.textArrangement: #TEXT_ONLY
   Active;
 
@@ -31,6 +27,17 @@ annotate view ZC_APG_GateHandle with
   @UI.selectionField: [ { position: 40 } ]
   ActivationClass;
 
+  @UI.identification: [ { position: 50 } ]
+  @UI.lineItem: [ { position: 50 } ]
+  Param1;
+
+  @UI.identification: [ { position: 60 } ]
+  @UI.lineItem: [ { position: 60 } ]
+  Param2;
+
   @UI.hidden: true
   LastChangedAt;
+
+  @UI.hidden: true
+  LocalLastChangedAt;
 }

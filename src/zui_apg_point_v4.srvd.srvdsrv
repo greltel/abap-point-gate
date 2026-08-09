@@ -3,4 +3,5 @@ define service ZUI_APG_POINT_V4 {
   expose ZC_APG_Point         as Point;
   expose ZC_APG_GateHandle    as Gate;
   expose ZI_APG_POINT_TYPE_VH as PointTypeVH;
+  expose ZI_APG_ACTIVE_VH     as ActivationStatusVH;
 }

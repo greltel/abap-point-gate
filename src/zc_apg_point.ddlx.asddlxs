@@ -3,41 +3,31 @@
 @UI.headerInfo: { typeName: 'Point',
                   typeNamePlural: 'Points',
                   title: { type: #STANDARD, value: 'PointId' },
-                  description: { type: #STANDARD, value: 'ActivationClass' } }
+                  description: { type: #STANDARD, value: 'Description' } }
 
 annotate view ZC_APG_Point with
-
 {
   @Consumption.valueHelpDefinition: [ { entity: { name: 'ZI_APG_POINT_VH', element: 'PointId' } } ]
   @UI.facet: [ { id: 'idIdentification', type: #IDENTIFICATION_REFERENCE, label: 'Point Details', position: 20 },
-               { id: 'idGates',
-                 type: #LINEITEM_REFERENCE,
-                 label: 'Handlers',
-                 position: 30,
-                 targetElement: '_Gates' } ,
-
-    { id:              'idAdminData',
-      type:            #FIELDGROUP_REFERENCE,
-      label:           'Administrative Data',
-      targetQualifier: 'AdminData', // Το όνομα του γκρουπ
-      position:        40 }
-      ]
+               { id: 'idGates', type: #LINEITEM_REFERENCE, label: 'Handlers', position: 30, targetElement: '_Gates' },
+               { id: 'idAdminData', type: #FIELDGROUP_REFERENCE, label: 'Administrative Data',
+                 targetQualifier: 'AdminData', position: 40 } ]
   @UI.identification: [ { position: 10 } ]
   @UI.lineItem: [ { position: 10 } ]
   @UI.selectionField: [ { position: 10 } ]
   PointId;
-  
-  @UI.identification: [ { position: 15, label: 'Description' } ]
-  @UI.lineItem: [ { position: 15, label: 'Description' } ] // Προαιρετικά: αν θες να φαίνεται και στον κεντρικό πίνακα
-  @UI.multiLineText: true // Κάνει το πεδίο μεγαλύτερο (κουτάκι) για πιο εύκολο γράψιμο
+
+  @UI.identification: [ { position: 15 } ]
+  @UI.lineItem: [ { position: 15 } ]
+  @UI.multiLineText: true
   Description;
-  
-  @UI.identification: [ { position: 16, label: 'Module Name' } ]
-  @UI.lineItem: [ { position: 16, label: 'Module Name' } ] // Για να το βλέπεις και στον αρχικό πίνακα!
-  @UI.selectionField: [ { position: 16 } ]                 // Βάλτο και στα φίλτρα, θα σου χρειαστεί για αναζήτηση
+
+  @UI.identification: [ { position: 16 } ]
+  @UI.lineItem: [ { position: 16 } ]
+  @UI.selectionField: [ { position: 16 } ]
   ModuleName;
-  
-  @Consumption.valueHelpDefinition: [ { entity: { name: 'ZI_APG_STATUS_VH', element: 'StatusCode' } } ]
+
+  @Consumption.valueHelpDefinition: [ { entity: { name: 'ZI_APG_ACTIVE_VH', element: 'ActivationStatus' } } ]
   @UI.dataPoint: { title: 'Activation Status', criticality: 'ActiveCriticality' }
   @UI.identification: [ { position: 20, criticality: 'ActiveCriticality' } ]
   @UI.lineItem: [ { position: 20, criticality: 'ActiveCriticality', criticalityRepresentation: #ONLY_ICON } ]
@@ -53,41 +43,42 @@ annotate view ZC_APG_Point with
 
   @Consumption.valueHelpDefinition: [ { entity: { name: 'ZI_APG_MAINPROG_VH', element: 'SrcMainProg' } } ]
   @EndUserText.label: 'Main Program'
-  @UI.identification: [ { position: 40, label: 'Main Program' } ]
-  @UI.lineItem: [ { position: 40, label: 'Main Program' } ]
+  @UI.identification: [ { position: 40 } ]
+  @UI.lineItem: [ { position: 40 } ]
   @UI.selectionField: [ { position: 40 } ]
   SrcMainProg;
 
   @Consumption.valueHelpDefinition: [ { entity: { name: 'ZI_APG_INCLUDE_VH', element: 'SrcInclude' } } ]
   @EndUserText.label: 'Include'
-  @UI.identification: [ { position: 50, label: 'Include' } ]
-  @UI.lineItem: [ { position: 50, label: 'Include' } ]
+  @UI.identification: [ { position: 50 } ]
+  @UI.lineItem: [ { position: 50 } ]
   @UI.selectionField: [ { position: 50 } ]
   SrcInclude;
 
   @EndUserText.label: 'Line Number'
-  @UI.identification: [ { position: 60, label: 'Line Number' } ]
-  @UI.lineItem: [ { position: 60, label: 'Line Number' } ]
-  @UI.selectionField: [ { position: 60 } ]
+  @UI.identification: [ { position: 60 } ]
+  @UI.lineItem: [ { position: 60 } ]
   SrcLine;
 
-  @Consumption.valueHelpDefinition: [ { entity: { name: 'ZI_APG_POINT_TYPE_VH', element: 'point_type' } } ]
+  @Consumption.valueHelpDefinition: [ { entity: { name: 'ZI_APG_POINT_TYPE_VH', element: 'PointType' } } ]
   @EndUserText.label: 'Point Type'
-  @UI.identification: [ { position: 70, label: 'Point Type' } ]
-  @UI.lineItem: [ { position: 70, label: 'Point Type' } ]
+  @UI.identification: [ { position: 70 } ]
+  @UI.lineItem: [ { position: 70 } ]
   @UI.selectionField: [ { position: 70 } ]
   PointTypeCode;
 
-
-  @UI.fieldGroup: [ { qualifier: 'AdminData', position: 10, label: 'Created By' } ]
+  @UI.fieldGroup: [ { qualifier: 'AdminData', position: 10 } ]
   CreatedBy;
 
-  @UI.fieldGroup: [ { qualifier: 'AdminData', position: 20, label: 'Created On' } ]
+  @UI.fieldGroup: [ { qualifier: 'AdminData', position: 20 } ]
   CreatedAt;
 
-  @UI.fieldGroup: [ { qualifier: 'AdminData', position: 30, label: 'Last Changed By' } ]
+  @UI.fieldGroup: [ { qualifier: 'AdminData', position: 30 } ]
   LastChangedBy;
 
-  @UI.fieldGroup: [ { qualifier: 'AdminData', position: 40, label: 'Last Changed On' } ]
+  @UI.fieldGroup: [ { qualifier: 'AdminData', position: 40 } ]
   LastChangedAt;
+
+  @UI.hidden: true
+  LocalLastChangedAt;
 }

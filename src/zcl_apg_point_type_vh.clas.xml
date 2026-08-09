@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_APG_POINT_TYPE_VH</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>ABAP Point Gate Custom Entity for Point Type</DESCRIPT>
+    <DESCRIPT>Point type value help</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

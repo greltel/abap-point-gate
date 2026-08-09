@@ -7,7 +7,7 @@ persistent table zapg_point
 draft table zapg_point_d
 lock master total etag LastChangedAt
 authorization master ( global )
-etag master LastChangedAt
+etag master LocalLastChangedAt
 {
   create;
   update;
@@ -19,29 +19,34 @@ etag master LastChangedAt
   draft action Resume;
   draft determine action Prepare
   {
+    validation validateActivationClass;
     validation Gate~validateHandlerClass;
+    validation Gate~validateActivationClass;
   }
+
+  validation validateActivationClass on save { field Active, ActivationClass; create; update; }
 
   association _Gates { create; with draft; }
 
-  field ( readonly ) CreatedAt, CreatedBy, LastChangedAt, LastChangedBy;
+  field ( readonly ) CreatedAt, CreatedBy, LastChangedAt, LastChangedBy, LocalLastChangedAt;
   field ( mandatory : create, readonly : update ) PointId;
 
   mapping for zapg_point
     {
-      PointId         = point_id;
-      Description     = description;
-      ModuleName      = module_name;
-      Active          = active;
-      ActivationClass = activation_class;
-      SrcMainProg     = src_main_prog;
-      SrcInclude      = src_include;
-      SrcLine         = src_line;
-      PointTypeCode   = point_type;
-      CreatedAt       = created_at;
-      CreatedBy       = created_by;
-      LastChangedAt   = last_changed_at;
-      LastChangedBy   = last_changed_by;
+      PointId            = point_id;
+      Description        = description;
+      ModuleName         = module_name;
+      Active             = active;
+      ActivationClass    = activation_class;
+      SrcMainProg        = src_main_prog;
+      SrcInclude         = src_include;
+      SrcLine            = src_line;
+      PointTypeCode      = point_type;
+      CreatedAt          = created_at;
+      CreatedBy          = created_by;
+      LastChangedAt      = last_changed_at;
+      LastChangedBy      = last_changed_by;
+      LocalLastChangedAt = local_last_changed_at;
     }
 }
 
@@ -50,28 +55,33 @@ persistent table zapg_gate_handle
 draft table zapg_gate_h_d
 lock dependent by _Point
 authorization dependent by _Point
-etag master LastChangedAt
+etag master LocalLastChangedAt
 {
   update;
   delete;
 
   validation validateHandlerClass on save { field HandlerClass; create; update; }
+  validation validateActivationClass on save { field Active, ActivationClass; create; update; }
 
   association _Point { with draft; }
 
-  field ( readonly ) PointId, CreatedAt, CreatedBy, LastChangedAt, LastChangedBy;
-  field ( mandatory : create, readonly : update ) HandlerClass, SeqNo;
+  field ( readonly ) PointId, CreatedAt, CreatedBy, LastChangedAt, LastChangedBy, LocalLastChangedAt;
+  field ( mandatory : create ) HandlerClass;
+  field ( mandatory : create, readonly : update ) SeqNo;
 
   mapping for zapg_gate_handle
     {
-      PointId         = point_id;
-      HandlerClass    = handler_class;
-      SeqNo           = seqno;
-      Active          = active;
-      ActivationClass = activation_class;
-      CreatedAt       = created_at;
-      CreatedBy       = created_by;
-      LastChangedAt   = last_changed_at;
-      LastChangedBy   = last_changed_by;
+      PointId            = point_id;
+      HandlerClass       = handler_class;
+      SeqNo              = seqno;
+      Active             = active;
+      ActivationClass    = activation_class;
+      Param1             = param_1;
+      Param2             = param_2;
+      CreatedAt          = created_at;
+      CreatedBy          = created_by;
+      LastChangedAt      = last_changed_at;
+      LastChangedBy      = last_changed_by;
+      LocalLastChangedAt = local_last_changed_at;
     }
 }

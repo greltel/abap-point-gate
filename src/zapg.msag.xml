@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_MSAG" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <T100A>
+    <ARBGB>ZAPG</ARBGB>
+    <MASTERLANG>E</MASTERLANG>
+    <STEXT>ABAP Point Gate Messages</STEXT>
+   </T100A>
+   <T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZAPG</ARBGB>
+     <MSGNR>000</MSGNR>
+     <TEXT>&amp;1 &amp;2 &amp;3 &amp;4</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZAPG</ARBGB>
+     <MSGNR>001</MSGNR>
+     <TEXT>Class &amp;1 does not exist</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZAPG</ARBGB>
+     <MSGNR>002</MSGNR>
+     <TEXT>Class &amp;1 does not implement interface &amp;2</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZAPG</ARBGB>
+     <MSGNR>003</MSGNR>
+     <TEXT>Instantiation of class &amp;1 failed</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZAPG</ARBGB>
+     <MSGNR>004</MSGNR>
+     <TEXT>No value found in context for name &amp;1</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZAPG</ARBGB>
+     <MSGNR>005</MSGNR>
+     <TEXT>Context value &amp;1 cannot be converted to the requested type</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZAPG</ARBGB>
+     <MSGNR>006</MSGNR>
+     <TEXT>Activation class is required when activation status is &apos;Custom&apos;</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZAPG</ARBGB>
+     <MSGNR>007</MSGNR>
+     <TEXT>Activation class &amp;1 is only allowed with activation status &apos;Custom&apos;</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZAPG</ARBGB>
+     <MSGNR>008</MSGNR>
+     <TEXT>Evaluation of activation class &amp;1 failed</TEXT>
+    </T100>
+   </T100>
+  </asx:values>
+ </asx:abap>
+</abapGit>

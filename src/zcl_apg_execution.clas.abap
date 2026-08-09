@@ -1,57 +1,57 @@
-class ZCL_APG_EXECUTION definition
-  public
-  final
-  create public .
+"! <p class="shorttext synchronized" lang="EN">ABAP Point Gate execution</p>
+"! Facade of the framework: executes all active handlers of a point.
+"! A failing handler is converted into an error message so that the
+"! remaining handlers and the host process are never aborted.
+CLASS zcl_apg_execution DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PRIVATE.
 
-public section.
+  PUBLIC SECTION.
+    TYPES tt_messages TYPE zif_apg_handler=>tt_messages.
+    TYPES tt_bapiret2 TYPE zif_apg_handler=>tt_messages. " compatibility alias for v1 consumers
 
-  types:
-    TT_BAPIRET2 TYPE STANDARD TABLE OF BAPIRET2 WITH EMPTY KEY .
+    "! Executes all active handlers of the point in sequence order.
+    "! @parameter point_id | Point to execute
+    "! @parameter context  | Shared execution context
+    "! @parameter messages | Message container filled by the handlers
+    "! @raising zcx_apg_error | Configuration or instantiation error
+    CLASS-METHODS execute_gate
+      IMPORTING point_id TYPE zapg_point_id
+                context  TYPE REF TO zif_apg_context
+      CHANGING  messages TYPE tt_messages
+      RAISING   zcx_apg_error.
 
-  class-methods EXECUTE_GATE
-    importing
-      !I_POINT_ID type ZAPG_POINT_ID
-      !I_CONTEXT type ref to ZIF_APG_CONTEXT
-    changing
-      !CO_MESSAGE_CONTAINER type TT_BAPIRET2
-    raising
-      ZCX_APG_ERROR .
-protected section.
-private section.
+  PROTECTED SECTION.
+  PRIVATE SECTION.
+    CONSTANTS message_type_error TYPE bapiret2-type VALUE 'E'.
+
+    CLASS-METHODS as_error_message
+      IMPORTING error         TYPE REF TO cx_root
+      RETURNING VALUE(result) TYPE bapiret2.
 ENDCLASS.
 
 
-
-CLASS ZCL_APG_EXECUTION IMPLEMENTATION.
-
+CLASS zcl_apg_execution IMPLEMENTATION.
 
   METHOD execute_gate.
+    DATA(handlers) = zcl_apg_factory=>get_active_handlers_for_gate( point_id = point_id
+                                                                    context  = context ).
 
-    DATA(lt_handlers) = zcl_apg_factory=>get_active_handlers_for_gate( i_point_id = i_point_id
-                                                                       i_context  = i_context ).
-
-    LOOP AT lt_handlers INTO DATA(lo_handler).
-
+    LOOP AT handlers INTO DATA(active_handler).
       TRY.
-          lo_handler->execute( EXPORTING i_context            = i_context
-                               CHANGING  co_message_container = co_message_container ).
-        CATCH zcx_apg_error INTO DATA(lx_apg).
-          DATA(lv_exception_message) = lx_apg->get_text( ).
-          co_message_container = VALUE #( BASE co_message_container ( type       = 'E'
-                                                                      id         = ''
-                                                                      number     = ''
-                                                                      message    = CONV #( lv_exception_message )
-                                                                      message_v1 = CONV #( lv_exception_message ) ) ).
-        CATCH cx_root INTO DATA(lx_root).
-          lv_exception_message = lx_root->get_text( ).
-          co_message_container = VALUE #( BASE co_message_container ( type       = 'E'
-                                                                      id         = ''
-                                                                      number     = ''
-                                                                      message    = CONV #( lv_exception_message )
-                                                                      message_v1 = CONV #( lv_exception_message ) ) ).
+          active_handler-handler->execute( EXPORTING context    = context
+                                                     parameters = active_handler-parameters
+                                           CHANGING  messages   = messages ).
+        CATCH cx_root INTO DATA(error). " intentional: a broken handler must not abort the host transaction
+          INSERT as_error_message( error ) INTO TABLE messages.
       ENDTRY.
-
     ENDLOOP.
-
   ENDMETHOD.
+
+  METHOD as_error_message.
+    result = VALUE #( type    = message_type_error
+                      message = error->get_text( ) ).
+  ENDMETHOD.
+
 ENDCLASS.
