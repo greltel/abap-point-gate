@@ -87,22 +87,45 @@ CLASS zcl_apg_factory IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD read_configurations.
-    SELECT FROM zapg_gate_handle AS gate
-           INNER JOIN zapg_point AS point ON point~point_id = gate~point_id
-      FIELDS point~point_id,
-             point~active           AS point_active,
-             point~activation_class AS point_activation_class,
-             gate~seqno,
-             gate~handler_class,
-             gate~active            AS gate_active,
-             gate~activation_class  AS gate_activation_class,
-             gate~param_1,
-             gate~param_2
-      WHERE gate~point_id  = @point_id
-        AND point~active  IN ( @activation_status-active, @activation_status-custom_toggle )
-        AND gate~active   IN ( @activation_status-active, @activation_status-custom_toggle )
-      ORDER BY gate~seqno ASCENDING
-      INTO TABLE @result.
+    " Two single-table reads instead of a join: ABAP SQL always bypasses the
+    " table buffer for joins, and both tables are fully buffered customizing.
+    SELECT SINGLE FROM zapg_point
+      FIELDS point_id,
+             active,
+             activation_class
+      WHERE point_id  = @point_id
+        AND active   IN ( @activation_status-active, @activation_status-custom_toggle )
+      INTO @DATA(point).
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    " ORDER BY PRIMARY KEY keeps the buffer: point_id is fixed by WHERE, so
+    " the remaining key component seqno drives the order. A plain
+    " ORDER BY seqno would bypass the buffer.
+    SELECT FROM zapg_gate_handle
+      FIELDS point_id,
+             seqno,
+             handler_class,
+             active,
+             activation_class,
+             param_1,
+             param_2
+      WHERE point_id  = @point_id
+        AND active   IN ( @activation_status-active, @activation_status-custom_toggle )
+      ORDER BY PRIMARY KEY
+      INTO TABLE @DATA(gates).
+
+    result = VALUE #( FOR gate IN gates
+                      ( point_id               = point-point_id
+                        point_active           = point-active
+                        point_activation_class = point-activation_class
+                        seqno                  = gate-seqno
+                        handler_class          = gate-handler_class
+                        gate_active            = gate-active
+                        gate_activation_class  = gate-activation_class
+                        param_1                = gate-param_1
+                        param_2                = gate-param_2 ) ).
   ENDMETHOD.
 
   METHOD is_point_active.
@@ -130,7 +153,7 @@ CLASS zcl_apg_factory IMPLEMENTATION.
 
     TRY.
         result = toggle->is_active( context ).
-      " boundary wrap: name the failing activation class
+        " boundary wrap: name the failing activation class
       CATCH cx_root INTO DATA(evaluation_error).
         RAISE EXCEPTION NEW zcx_apg_error( textid     = zcx_apg_error=>toggle_evaluation_failed
                                            class_name = |{ activation_class }|

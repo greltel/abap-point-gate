@@ -1,3 +1,5 @@
+// Custom entity: no database access, so access control does not apply here.
+// The query class serves DDIC domain fixed values only - no business data.
 @EndUserText.label: 'Value Help for Point Type'
 @ObjectModel.query.implementedBy: 'ABAP:ZCL_APG_POINT_TYPE_VH'
 @ObjectModel.resultSet.sizeCategory: #XS

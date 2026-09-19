@@ -7,7 +7,6 @@
     <DDLANGUAGE>E</DDLANGUAGE>
     <DDTEXT>Point Header</DDTEXT>
     <SOURCE_TYPE>W</SOURCE_TYPE>
-    <ABAP_LANGUAGE_VERSION>5</ABAP_LANGUAGE_VERSION>
    </DDLS>
   </asx:values>
  </asx:abap>
