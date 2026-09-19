@@ -1,4 +1,4 @@
-@AccessControl.authorizationCheck: #NOT_REQUIRED
+@AccessControl.authorizationCheck: #CHECK
 @EndUserText.label: 'Gate Handlers'
 @Search.searchable: true
 define view entity ZR_APG_GateHandle

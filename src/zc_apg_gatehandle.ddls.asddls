@@ -1,4 +1,4 @@
-@AccessControl.authorizationCheck: #NOT_REQUIRED
+@AccessControl.authorizationCheck: #CHECK
 @EndUserText.label: 'Maintain Handlers - Projection'
 @Metadata.allowExtensions: true
 define view entity ZC_APG_GateHandle

@@ -20,17 +20,16 @@ CLASS ZCL_APG_AUTHORIZATION IMPLEMENTATION.
 
 
   METHOD zif_apg_authorization~is_allowed.
-*    AUTHORITY-CHECK OBJECT 'ZAPG_POINT'
-*      ID 'ZAPG_PID' DUMMY
-*      ID 'ACTVT'    FIELD activity.
-*    result = xsdbool( sy-subrc = 0 ).
+    AUTHORITY-CHECK OBJECT 'ZAPG_POINT'
+      ID 'ZAPG_PID' DUMMY
+      ID 'ACTVT'    FIELD activity.
+    result = xsdbool( sy-subrc = 0 ).
   ENDMETHOD.
 
-
   METHOD zif_apg_authorization~is_allowed_for_point.
-*    AUTHORITY-CHECK OBJECT 'ZAPG_POINT'
-*      ID 'ZAPG_PID' FIELD point_id
-*      ID 'ACTVT'    FIELD activity.
-*    result = xsdbool( sy-subrc = 0 ).
+    AUTHORITY-CHECK OBJECT 'ZAPG_POINT'
+      ID 'ZAPG_PID' FIELD point_id
+      ID 'ACTVT'    FIELD activity.
+    result = xsdbool( sy-subrc = 0 ).
   ENDMETHOD.
 ENDCLASS.

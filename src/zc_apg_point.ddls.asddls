@@ -1,4 +1,4 @@
-@AccessControl.authorizationCheck: #NOT_REQUIRED
+@AccessControl.authorizationCheck: #CHECK
 @EndUserText.label: 'Maintain Point - Projection'
 @Metadata.allowExtensions: true
 define root view entity ZC_APG_Point

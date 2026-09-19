@@ -1,0 +1,10 @@
+@EndUserText.label: 'Access control - Point Gate projection'
+@MappingRole: true
+define role ZC_APG_POINT {
+
+  grant select on ZC_APG_Point
+    where inheriting conditions from entity ZR_APG_Point;
+
+  grant select on ZC_APG_GateHandle
+    where inheriting conditions from entity ZR_APG_GateHandle;
+}
