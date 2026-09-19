@@ -106,6 +106,39 @@ CLASS lcl_activation_check IMPLEMENTATION.
 ENDCLASS.
 
 
+"! Composition root of the behavior pool. The framework instantiates the
+"! handler classes, so collaborators are resolved here instead of through a
+"! constructor. The static overrides are test infrastructure, not state.
+CLASS lcl_point_factory DEFINITION FINAL CREATE PRIVATE.
+  PUBLIC SECTION.
+    "! Returns the authorization adapter, or the injected double.
+    CLASS-METHODS authorization
+      RETURNING VALUE(result) TYPE REF TO zif_apg_authorization.
+
+    "! Test hook - pass an unbound reference to restore the production default.
+    CLASS-METHODS inject_authorization
+      IMPORTING authorization TYPE REF TO zif_apg_authorization.
+
+  PRIVATE SECTION.
+    CLASS-DATA authorization_override TYPE REF TO zif_apg_authorization.
+ENDCLASS.
+
+
+CLASS lcl_point_factory IMPLEMENTATION.
+
+  METHOD authorization.
+    result = COND #( WHEN authorization_override IS BOUND
+                     THEN authorization_override
+                     ELSE NEW zcl_apg_authorization( ) ).
+  ENDMETHOD.
+
+  METHOD inject_authorization.
+    authorization_override = authorization.
+  ENDMETHOD.
+
+ENDCLASS.
+
+
 CLASS lhc_gate DEFINITION INHERITING FROM cl_abap_behavior_handler.
   PRIVATE SECTION.
     CONSTANTS message_class TYPE symsgid VALUE 'ZAPG'.
@@ -195,6 +228,9 @@ CLASS lhc_point DEFINITION INHERITING FROM cl_abap_behavior_handler.
     METHODS get_global_authorizations FOR GLOBAL AUTHORIZATION
       IMPORTING REQUEST requested_authorizations FOR point RESULT result.
 
+    METHODS get_instance_authorizations FOR INSTANCE AUTHORIZATION
+      IMPORTING keys REQUEST requested_authorizations FOR point RESULT result.
+
     METHODS validateactivationclass FOR VALIDATE ON SAVE
       IMPORTING keys FOR point~validateactivationclass.
 ENDCLASS.
@@ -203,8 +239,56 @@ ENDCLASS.
 CLASS lhc_point IMPLEMENTATION.
 
   METHOD get_global_authorizations.
-    " Intentionally open: the framework configuration app has no own
-    " authorization object yet. A dedicated object + DCL is a roadmap item.
+    DATA(authorization) = lcl_point_factory=>authorization( ).
+
+    IF requested_authorizations-%create = if_abap_behv=>mk-on.
+      result-%create = COND #(
+          WHEN authorization->is_allowed( zif_apg_authorization=>activity-create ) = abap_true
+          THEN if_abap_behv=>auth-allowed
+          ELSE if_abap_behv=>auth-unauthorized ).
+    ENDIF.
+
+    IF requested_authorizations-%update = if_abap_behv=>mk-on.
+      result-%update = COND #(
+          WHEN authorization->is_allowed( zif_apg_authorization=>activity-change ) = abap_true
+          THEN if_abap_behv=>auth-allowed
+          ELSE if_abap_behv=>auth-unauthorized ).
+    ENDIF.
+
+    IF requested_authorizations-%delete = if_abap_behv=>mk-on.
+      result-%delete = COND #(
+          WHEN authorization->is_allowed( zif_apg_authorization=>activity-delete ) = abap_true
+          THEN if_abap_behv=>auth-allowed
+          ELSE if_abap_behv=>auth-unauthorized ).
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD get_instance_authorizations.
+    READ ENTITIES OF zr_apg_point IN LOCAL MODE
+         ENTITY point
+         FIELDS ( pointid )
+         WITH CORRESPONDING #( keys )
+         RESULT DATA(points).
+
+    DATA(authorization) = lcl_point_factory=>authorization( ).
+
+    LOOP AT points INTO DATA(point).
+      DATA(may_change) = authorization->is_allowed_for_point(
+                             activity = zif_apg_authorization=>activity-change
+                             point_id = point-pointid ).
+      DATA(may_delete) = authorization->is_allowed_for_point(
+                             activity = zif_apg_authorization=>activity-delete
+                             point_id = point-pointid ).
+
+      INSERT VALUE #( %tky    = point-%tky
+                      %update = COND #( WHEN may_change = abap_true
+                                        THEN if_abap_behv=>auth-allowed
+                                        ELSE if_abap_behv=>auth-unauthorized )
+                      %delete = COND #( WHEN may_delete = abap_true
+                                        THEN if_abap_behv=>auth-allowed
+                                        ELSE if_abap_behv=>auth-unauthorized ) )
+        INTO TABLE result.
+    ENDLOOP.
   ENDMETHOD.
 
   METHOD validateactivationclass.

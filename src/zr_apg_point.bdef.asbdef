@@ -6,7 +6,7 @@ define behavior for ZR_APG_Point alias Point
 persistent table zapg_point
 draft table zapg_point_d
 lock master total etag LastChangedAt
-authorization master ( global )
+authorization master ( global, instance )
 etag master LocalLastChangedAt
 {
   create;

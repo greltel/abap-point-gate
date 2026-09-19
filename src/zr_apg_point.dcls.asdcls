@@ -1,0 +1,10 @@
+@EndUserText.label: 'Access control - Point Gate configuration'
+@MappingRole: true
+define role ZR_APG_POINT {
+
+  grant select on ZR_APG_Point
+    where ( PointId ) = aspect pfcg_auth( ZAPG_POINT, ZAPG_PID, ACTVT = '03' );
+
+  grant select on ZR_APG_GateHandle
+    where inheriting conditions from entity ZR_APG_Point;
+}

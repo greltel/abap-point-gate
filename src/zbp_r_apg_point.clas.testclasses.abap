@@ -104,3 +104,81 @@ CLASS ltc_class_inspector IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+
+CLASS ltd_authorization DEFINITION FINAL FOR TESTING.
+  PUBLIC SECTION.
+    INTERFACES zif_apg_authorization.
+
+    METHODS constructor
+      IMPORTING allowed TYPE abap_bool.
+
+  PRIVATE SECTION.
+    DATA allowed TYPE abap_bool.
+ENDCLASS.
+
+CLASS ltd_authorization IMPLEMENTATION.
+  METHOD constructor.
+    me->allowed = allowed.
+  ENDMETHOD.
+
+  METHOD zif_apg_authorization~is_allowed.
+    result = allowed.
+  ENDMETHOD.
+
+  METHOD zif_apg_authorization~is_allowed_for_point.
+    result = allowed.
+  ENDMETHOD.
+ENDCLASS.
+
+
+CLASS ltc_point_factory DEFINITION
+  FINAL FOR TESTING
+  RISK LEVEL HARMLESS
+  DURATION SHORT.
+
+  PRIVATE SECTION.
+    METHODS teardown.
+    METHODS given_no_inject_then_adapter FOR TESTING.
+    METHODS given_inject_then_double     FOR TESTING.
+    METHODS given_unbound_then_restored  FOR TESTING.
+ENDCLASS.
+
+
+CLASS ltc_point_factory IMPLEMENTATION.
+
+  METHOD teardown.
+    lcl_point_factory=>inject_authorization( VALUE #( ) ).
+  ENDMETHOD.
+
+  METHOD given_no_inject_then_adapter.
+    " ACT & ASSERT - the production default is the AUTHORITY-CHECK adapter
+    cl_abap_unit_assert=>assert_true(
+        act = xsdbool( lcl_point_factory=>authorization( ) IS INSTANCE OF zcl_apg_authorization )
+        msg = `Without injection the factory must return the production adapter` ).
+  ENDMETHOD.
+
+  METHOD given_inject_then_double.
+    " ARRANGE
+    DATA(double) = NEW ltd_authorization( abap_false ).
+    lcl_point_factory=>inject_authorization( double ).
+
+    " ACT & ASSERT
+    cl_abap_unit_assert=>assert_equals( act = lcl_point_factory=>authorization( )
+                                        exp = double
+                                        msg = `An injected double must be handed out unchanged` ).
+  ENDMETHOD.
+
+  METHOD given_unbound_then_restored.
+    " ARRANGE
+    lcl_point_factory=>inject_authorization( NEW ltd_authorization( abap_false ) ).
+
+    " ACT
+    lcl_point_factory=>inject_authorization( VALUE #( ) ).
+
+    " ASSERT
+    cl_abap_unit_assert=>assert_true(
+        act = xsdbool( lcl_point_factory=>authorization( ) IS INSTANCE OF zcl_apg_authorization )
+        msg = `An unbound injection must restore the production adapter` ).
+  ENDMETHOD.
+
+ENDCLASS.

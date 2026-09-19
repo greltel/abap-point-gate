@@ -3,6 +3,7 @@ strict ( 2 );
 use draft;
 
 define behavior for ZC_APG_Point
+  use etag
 {
   use create;
   use update;
@@ -18,6 +19,7 @@ define behavior for ZC_APG_Point
 }
 
 define behavior for ZC_APG_GateHandle
+  use etag
 {
   use update;
   use delete;

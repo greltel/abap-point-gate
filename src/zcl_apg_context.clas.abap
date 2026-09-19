@@ -36,7 +36,7 @@ ENDCLASS.
 CLASS zcl_apg_context IMPLEMENTATION.
 
   METHOD zif_apg_context~set_data.
-    DELETE entries WHERE name = name.
+    DELETE TABLE entries WITH TABLE KEY name = name.
     INSERT VALUE #( name  = name
                     value = value ) INTO TABLE entries.
   ENDMETHOD.

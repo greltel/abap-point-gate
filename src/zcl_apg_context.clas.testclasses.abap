@@ -7,12 +7,13 @@ CLASS ltc_context DEFINITION
     DATA cut TYPE REF TO zif_apg_context.
 
     METHODS setup.
-    METHODS given_string_then_returned  FOR TESTING RAISING zcx_apg_error.
-    METHODS given_date_then_returned    FOR TESTING RAISING zcx_apg_error.
-    METHODS given_int_then_returned     FOR TESTING RAISING zcx_apg_error.
-    METHODS given_set_twice_then_latest FOR TESTING RAISING zcx_apg_error.
-    METHODS given_value_then_has_data   FOR TESTING.
-    METHODS given_missing_then_raises   FOR TESTING.
+    METHODS given_string_then_returned    FOR TESTING RAISING zcx_apg_error.
+    METHODS given_date_then_returned      FOR TESTING RAISING zcx_apg_error.
+    METHODS given_int_then_returned       FOR TESTING RAISING zcx_apg_error.
+    METHODS given_set_twice_then_latest   FOR TESTING RAISING zcx_apg_error.
+    METHODS given_two_keys_then_both_kept FOR TESTING RAISING zcx_apg_error.
+    METHODS given_value_then_has_data     FOR TESTING.
+    METHODS given_missing_then_raises     FOR TESTING.
 ENDCLASS.
 
 
@@ -79,6 +80,26 @@ CLASS ltc_context IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals( act = text
                                         exp = `Second`
                                         msg = 'Overwriting a name must keep the latest value' ).
+  ENDMETHOD.
+
+  METHOD given_two_keys_then_both_kept.
+    " ARRANGE
+    cut->set_data( name  = `FIRST`
+                   value = NEW string( `1` ) ).
+
+    " ACT - storing a second, different name must not touch the first
+    cut->set_data( name  = `SECOND`
+                   value = NEW string( `2` ) ).
+
+    " ASSERT
+    cl_abap_unit_assert=>assert_true( act = cut->has_data( `FIRST` )
+                                      msg = `Storing a second name must not drop the first one` ).
+    cl_abap_unit_assert=>assert_equals( act = cut->get_string( `FIRST` )
+                                        exp = `1`
+                                        msg = `The first value must survive unchanged` ).
+    cl_abap_unit_assert=>assert_equals( act = cut->get_string( `SECOND` )
+                                        exp = `2`
+                                        msg = `The second value must be stored` ).
   ENDMETHOD.
 
   METHOD given_value_then_has_data.
