@@ -1,5 +1,7 @@
 @AbapCatalog.viewEnhancementCategory: [ #NONE ]
-
+// Aggregates the point key away, so no row-level condition is possible.
+// Returns distinct program / class names only - the same metadata the
+// configuration app already shows to anyone allowed to open it.
 @AccessControl.authorizationCheck: #NOT_REQUIRED
 
 @EndUserText.label: 'Value Help for Main Program'

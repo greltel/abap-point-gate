@@ -4,18 +4,4 @@ define role ZI_APG_VALUE_HELPS {
 
   grant select on ZI_APG_POINT_VH
     where ( PointId ) = aspect pfcg_auth( ZAPG_POINT, ZAPG_PID, ACTVT = '03' );
-
-  // The remaining value helps aggregate away the point key, so only the
-  // display activity of the configuration object can be checked.
- // grant select on ZI_APG_MAINPROG_VH
-    //where aspect pfcg_auth( ZAPG_POINT, ACTVT = '03' );
-
- // grant select on ZI_APG_INCLUDE_VH
-    //where aspect pfcg_auth( ZAPG_POINT, ACTVT = '03' );
-
-  //grant select on ZI_APG_POINT_ACT_CLASS_VH
-    //where aspect pfcg_auth( ZAPG_POINT, ACTVT = '03' );
-
-  //grant select on ZI_APG_GATE_ACT_CLASS_VH
-    //where aspect pfcg_auth( ZAPG_POINT, ACTVT = '03' );
 }

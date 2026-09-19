@@ -27,11 +27,6 @@
     <DD07V>
      <VALPOS>0003</VALPOS>
      <DDLANGUAGE>E</DDLANGUAGE>
-     <DDTEXT>Unknown</DDTEXT>
-    </DD07V>
-    <DD07V>
-     <VALPOS>0004</VALPOS>
-     <DDLANGUAGE>E</DDLANGUAGE>
      <DOMVALUE_L>C</DOMVALUE_L>
      <DDTEXT>Custom Toggle</DDTEXT>
     </DD07V>

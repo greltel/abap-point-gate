@@ -4,6 +4,7 @@
   <asx:values>
    <DEVC>
     <CTEXT>Point Gate Framework</CTEXT>
+    <PACKKIND>5</PACKKIND>
    </DEVC>
   </asx:values>
  </asx:abap>
