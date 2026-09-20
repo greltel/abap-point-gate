@@ -1,11 +1,10 @@
-"! <p class="shorttext synchronized" lang="EN">ABAP Point Gate injector</p>
+"! <p class="shorttext synchronized">ABAP Point Gate injector</p>
 "! Dependency injection registry of the framework. Resolves handler and
 "! toggle instances (test double or dynamic creation) and stores injected
 "! configurations. Static state is intentional: this is cross-cutting
 "! DI infrastructure, not a business class.
 CLASS zcl_apg_injector DEFINITION
-  PUBLIC
-  FINAL
+  PUBLIC FINAL
   CREATE PRIVATE.
 
   PUBLIC SECTION.
@@ -22,19 +21,27 @@ CLASS zcl_apg_injector DEFINITION
            END OF ty_configuration,
            tt_configurations TYPE STANDARD TABLE OF ty_configuration WITH EMPTY KEY.
 
+    "! Returns abap_true when a configuration was injected for the point,
+    "! including one that is intentionally empty.
+    "! @parameter point_id | Point to look up
+    "! @parameter result   | abap_true when an injected configuration exists
+    CLASS-METHODS has_configurations
+      IMPORTING point_id      TYPE zapg_point_id
+      RETURNING VALUE(result) TYPE abap_bool.
+
     "! Returns a handler instance: an injected double or a new instance.
-    "! @parameter classname | Name of the handler class
-    "! @parameter result    | Handler instance
-    "! @raising zcx_apg_error | Class not creatable or wrong interface
+    "! @parameter classname     | Name of the handler class
+    "! @parameter result        | Handler instance
+    "! @raising   zcx_apg_error | Class not creatable or wrong interface
     CLASS-METHODS get_handler
       IMPORTING classname     TYPE abap_classname
       RETURNING VALUE(result) TYPE REF TO zif_apg_handler
       RAISING   zcx_apg_error.
 
     "! Returns a toggle instance: an injected double or a new instance.
-    "! @parameter classname | Name of the activation class
-    "! @parameter result    | Toggle instance
-    "! @raising zcx_apg_error | Class not creatable or wrong interface
+    "! @parameter classname     | Name of the activation class
+    "! @parameter result        | Toggle instance
+    "! @raising   zcx_apg_error | Class not creatable or wrong interface
     CLASS-METHODS get_toggle
       IMPORTING classname     TYPE abap_classname
       RETURNING VALUE(result) TYPE REF TO zif_apg_activation_toggle
@@ -45,7 +52,7 @@ CLASS zcl_apg_injector DEFINITION
     "! @parameter instance  | Test double instance
     CLASS-METHODS inject_instance
       IMPORTING classname TYPE abap_classname
-                instance  TYPE REF TO object.
+                !instance TYPE REF TO object.
 
     "! Registers a mock configuration for a point.
     "! @parameter point_id       | Point the configuration belongs to
@@ -69,7 +76,6 @@ CLASS zcl_apg_injector DEFINITION
     "! Removes all injected doubles, configurations and inspectors.
     CLASS-METHODS clear.
 
-  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_mock,
              classname TYPE abap_classname,
@@ -91,9 +97,13 @@ CLASS zcl_apg_injector DEFINITION
       RETURNING VALUE(result) TYPE REF TO zif_apg_class_inspector.
 
     "! Raises the error that explains why the class cannot serve the interface.
+    "!
+    "! @parameter classname |
+    "! @parameter interface |
+    "! @raising zcx_apg_error |
     CLASS-METHODS check_usable
-      IMPORTING classname TYPE abap_classname
-                interface TYPE abap_classname
+      IMPORTING classname  TYPE abap_classname
+                !interface TYPE abap_classname
       RAISING   zcx_apg_error.
 
     CLASS-METHODS get_mock
@@ -103,6 +113,9 @@ ENDCLASS.
 
 
 CLASS zcl_apg_injector IMPLEMENTATION.
+  METHOD has_configurations.
+    result = xsdbool( line_exists( mock_configurations[ point_id = point_id ] ) ).
+  ENDMETHOD.
 
   METHOD get_handler.
     DATA(mock) = get_mock( classname ).
@@ -209,5 +222,4 @@ CLASS zcl_apg_injector IMPLEMENTATION.
   METHOD get_mock.
     result = VALUE #( mocks[ classname = classname ]-instance OPTIONAL ).
   ENDMETHOD.
-
 ENDCLASS.

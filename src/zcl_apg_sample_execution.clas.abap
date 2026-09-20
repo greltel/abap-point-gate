@@ -49,7 +49,7 @@ CLASS zcl_apg_sample_execution IMPLEMENTATION.
     ENDTRY.
 
     IF journal_entry_ref IS NOT BOUND.
-      RAISE EXCEPTION NEW zcx_apg_error( textid       = zcx_apg_error=>context_value_missing
+      RAISE EXCEPTION NEW zcx_apg_error( textid       = zcx_apg_error=>context_value_empty
                                          context_name = context_name_journal_entry ).
     ENDIF.
 

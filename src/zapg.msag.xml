@@ -74,6 +74,12 @@
      <MSGNR>010</MSGNR>
      <TEXT>Posting date must be initial</TEXT>
     </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZAPG</ARBGB>
+     <MSGNR>011</MSGNR>
+     <TEXT>Context value &amp;1 is stored but empty</TEXT>
+    </T100>
    </T100>
   </asx:values>
  </asx:abap>

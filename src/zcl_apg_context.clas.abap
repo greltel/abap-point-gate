@@ -97,7 +97,9 @@ CLASS zcl_apg_context IMPLEMENTATION.
   METHOD assign_value.
     result = get_data( name ).
     IF result IS NOT BOUND.
-      RAISE EXCEPTION NEW zcx_apg_error( textid       = zcx_apg_error=>context_value_missing
+      " The name is known, the reference behind it is not usable - a
+      " different problem from an unknown name, and worth its own message
+      RAISE EXCEPTION NEW zcx_apg_error( textid       = zcx_apg_error=>context_value_empty
                                          context_name = name ).
     ENDIF.
   ENDMETHOD.

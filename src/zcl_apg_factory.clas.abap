@@ -1,9 +1,8 @@
-"! <p class="shorttext synchronized" lang="EN">ABAP Point Gate factory</p>
+"! <p class="shorttext synchronized">ABAP Point Gate factory</p>
 "! Resolves the active handler instances of a point by evaluating the
 "! hierarchical activation model (point level first, then gate level).
 CLASS zcl_apg_factory DEFINITION
-  PUBLIC
-  FINAL
+  PUBLIC FINAL
   CREATE PRIVATE.
 
   PUBLIC SECTION.
@@ -21,17 +20,16 @@ CLASS zcl_apg_factory DEFINITION
 
     "! Returns the handlers of all active gates of the point, in sequence
     "! order. Returns an empty table when the point itself is not active.
-    "! @parameter point_id | Point to resolve
-    "! @parameter context  | Shared execution context (passed to toggles)
-    "! @parameter result   | Active handler instances in execution order
-    "! @raising zcx_apg_error | Toggle evaluation or instantiation failed
+    "! @parameter point_id      | Point to resolve
+    "! @parameter context       | Shared execution context (passed to toggles)
+    "! @parameter result        | Active handler instances in execution order
+    "! @raising   zcx_apg_error | Toggle evaluation or instantiation failed
     CLASS-METHODS get_active_handlers_for_gate
       IMPORTING point_id      TYPE zapg_point_id
-                context       TYPE REF TO zif_apg_context
+                !context      TYPE REF TO zif_apg_context
       RETURNING VALUE(result) TYPE tt_active_handlers
       RAISING   zcx_apg_error.
 
-  PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-METHODS read_configurations
       IMPORTING point_id      TYPE zapg_point_id
@@ -39,32 +37,32 @@ CLASS zcl_apg_factory DEFINITION
 
     CLASS-METHODS is_point_active
       IMPORTING configuration TYPE zcl_apg_injector=>ty_configuration
-                context       TYPE REF TO zif_apg_context
+                !context      TYPE REF TO zif_apg_context
       RETURNING VALUE(result) TYPE abap_bool
       RAISING   zcx_apg_error.
 
     CLASS-METHODS is_gate_active
       IMPORTING configuration TYPE zcl_apg_injector=>ty_configuration
-                context       TYPE REF TO zif_apg_context
+                !context      TYPE REF TO zif_apg_context
       RETURNING VALUE(result) TYPE abap_bool
       RAISING   zcx_apg_error.
 
     CLASS-METHODS is_toggle_active
       IMPORTING activation_class TYPE zapg_activation_class
-                context          TYPE REF TO zif_apg_context
+                !context         TYPE REF TO zif_apg_context
       RETURNING VALUE(result)    TYPE abap_bool
       RAISING   zcx_apg_error.
 ENDCLASS.
 
 
 CLASS zcl_apg_factory IMPLEMENTATION.
-
   METHOD get_active_handlers_for_gate.
-    DATA(configurations) = zcl_apg_injector=>get_configurations( point_id ).
-
-    IF configurations IS INITIAL.
-      configurations = read_configurations( point_id ).
-    ENDIF.
+    " An injected configuration wins even when it is empty on purpose -
+    " otherwise a test asking for "no gates" silently reads the database
+    DATA(configurations) = COND zcl_apg_injector=>tt_configurations(
+        WHEN zcl_apg_injector=>has_configurations( point_id ) = abap_true
+        THEN zcl_apg_injector=>get_configurations( point_id )
+        ELSE read_configurations( point_id ) ).
 
     IF configurations IS INITIAL.
       RETURN.
@@ -130,22 +128,24 @@ CLASS zcl_apg_factory IMPLEMENTATION.
 
   METHOD is_point_active.
     result = SWITCH #( configuration-point_active
-               WHEN activation_status-active
-                 THEN abap_true
-               WHEN activation_status-custom_toggle
-                 THEN is_toggle_active( activation_class = configuration-point_activation_class
-                                        context          = context )
-               ELSE abap_false ).
+                       WHEN activation_status-active THEN
+                         abap_true
+                       WHEN activation_status-custom_toggle THEN
+                         is_toggle_active( activation_class = configuration-point_activation_class
+                                           context          = context )
+                       ELSE
+                         abap_false ).
   ENDMETHOD.
 
   METHOD is_gate_active.
     result = SWITCH #( configuration-gate_active
-               WHEN activation_status-active
-                 THEN abap_true
-               WHEN activation_status-custom_toggle
-                 THEN is_toggle_active( activation_class = configuration-gate_activation_class
-                                        context          = context )
-               ELSE abap_false ).
+                       WHEN activation_status-active THEN
+                         abap_true
+                       WHEN activation_status-custom_toggle THEN
+                         is_toggle_active( activation_class = configuration-gate_activation_class
+                                           context          = context )
+                       ELSE
+                         abap_false ).
   ENDMETHOD.
 
   METHOD is_toggle_active.
@@ -160,5 +160,4 @@ CLASS zcl_apg_factory IMPLEMENTATION.
                                            previous   = evaluation_error ).
     ENDTRY.
   ENDMETHOD.
-
 ENDCLASS.
