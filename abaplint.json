@@ -158,7 +158,7 @@
     "local_variable_names": false,
     "class_attribute_names": false,
     "object_naming": {
-      "clas": "^Z(C[LX]|BP)",
+      "clas": "^Z(C[LXM]|BP)",
       "intf": "^ZIF",
       "tabl": "^Z",
       "ttyp": "^Z",
