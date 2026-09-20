@@ -20,7 +20,6 @@
   ],
   "syntax": {
     "version": "Cloud",
-    "release": "758",
     "errorNamespace": "^(Z|Y)"
   },
   "rules": {
