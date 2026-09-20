@@ -4,6 +4,7 @@
 > If you spot a bug or have an idea for a cool enhancement, your contributions are more than welcome. Feel free to open an **Issue** or submit a **Pull Request** — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 [![abaplint](https://github.com/greltel/abap-point-gate/actions/workflows/abaplint.yml/badge.svg)](https://github.com/greltel/abap-point-gate/actions/workflows/abaplint.yml)
+[![Unit Tests](https://github.com/greltel/abap-point-gate/actions/workflows/ci.yml/badge.svg)](https://github.com/greltel/abap-point-gate/actions/workflows/ci.yml)
 [![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)](https://github.com/greltel/abap-point-gate/releases)
 [![ABAP Cloud](https://img.shields.io/badge/ABAP-Cloud%20Ready-green)](https://abaplint.app/stats/greltel/abap-point-gate/object_classifications)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/greltel/abap-point-gate/blob/main/LICENSE)
