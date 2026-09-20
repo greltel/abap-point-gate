@@ -10,5 +10,6 @@
     <OUTPUTLEN>000040</OUTPUTLEN>
     <DDTEXT>ABAP program name</DDTEXT>
    </DD01V>
-  </asx:abap>
- </abapGit>
+  </asx:values>
+ </asx:abap>
+</abapGit>
