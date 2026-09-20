@@ -6,6 +6,7 @@
     <DCLNAME>ZI_APG_VALUE_HELPS</DCLNAME>
     <DCLLANGUAGE>E</DCLLANGUAGE>
     <DDTEXT>Access control - Point Gate value helps</DDTEXT>
+    <ABAP_LANGUAGE_VERSION>5</ABAP_LANGUAGE_VERSION>
    </DCLS>
   </asx:values>
  </asx:abap>

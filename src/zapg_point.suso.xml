@@ -6,7 +6,7 @@
     <OBJCT>ZAPG_POINT</OBJCT>
     <FIEL1>ZAPG_PID</FIEL1>
     <FIEL2>ACTVT</FIEL2>
-    <OCLSS>ZAPG</OCLSS>
+    <OCLSS>CPAE</OCLSS>
    </TOBJ>
    <TOBJT>
     <LANGU>E</LANGU>
@@ -37,6 +37,7 @@
      <ACTVT>06</ACTVT>
     </TACTZ>
    </TACTZ>
+   <ABAP_LANGUAGE_VERSION>5</ABAP_LANGUAGE_VERSION>
   </asx:values>
  </asx:abap>
 </abapGit>

@@ -6,6 +6,7 @@
     <DCLNAME>ZR_APG_POINT</DCLNAME>
     <DCLLANGUAGE>E</DCLLANGUAGE>
     <DDTEXT>Access control - Point Gate configuration</DDTEXT>
+    <ABAP_LANGUAGE_VERSION>5</ABAP_LANGUAGE_VERSION>
    </DCLS>
   </asx:values>
  </asx:abap>

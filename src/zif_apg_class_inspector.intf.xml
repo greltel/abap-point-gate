@@ -8,6 +8,7 @@
     <DESCRIPT>ABAP Point Gate class inspector</DESCRIPT>
     <EXPOSURE>2</EXPOSURE>
     <STATE>1</STATE>
+    <UNICODE>5</UNICODE>
    </VSEOINTERF>
   </asx:values>
  </asx:abap>

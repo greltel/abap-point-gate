@@ -8,6 +8,7 @@
     <DESCRIPT>ABAP Point Gate activation toggle</DESCRIPT>
     <EXPOSURE>2</EXPOSURE>
     <STATE>1</STATE>
+    <UNICODE>5</UNICODE>
    </VSEOINTERF>
    <DESCRIPTIONS_SUB>
     <SEOSUBCOTX>

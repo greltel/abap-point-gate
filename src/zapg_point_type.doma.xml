@@ -10,6 +10,7 @@
     <OUTPUTLEN>000001</OUTPUTLEN>
     <VALEXI>X</VALEXI>
     <DDTEXT>ABAP Point Gate Point Type</DDTEXT>
+    <ABAP_LANGUAGE_VERSION>5</ABAP_LANGUAGE_VERSION>
    </DD01V>
    <DD07V_TAB>
     <DD07V>
@@ -73,6 +74,9 @@
      <DDTEXT>Authorization</DDTEXT>
     </DD07V>
    </DD07V_TAB>
+   <DD01L_EXTRA>
+    <ABAP_LANGUAGE_VERSION>5</ABAP_LANGUAGE_VERSION>
+   </DD01L_EXTRA>
   </asx:values>
  </asx:abap>
 </abapGit>

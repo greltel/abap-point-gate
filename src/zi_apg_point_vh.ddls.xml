@@ -7,6 +7,7 @@
     <DDLANGUAGE>E</DDLANGUAGE>
     <DDTEXT>Value Help for Point ID</DDTEXT>
     <SOURCE_TYPE>W</SOURCE_TYPE>
+    <ABAP_LANGUAGE_VERSION>5</ABAP_LANGUAGE_VERSION>
    </DDLS>
   </asx:values>
  </asx:abap>
