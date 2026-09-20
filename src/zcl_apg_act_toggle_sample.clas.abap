@@ -9,13 +9,25 @@ CLASS zcl_apg_act_toggle_sample DEFINITION
   PUBLIC SECTION.
     INTERFACES zif_apg_activation_toggle.
 
+    "! Creates the toggle with the clock it compares the posting date against.
+    "! @parameter clock | Injected in tests; the production default is the system clock
+    METHODS constructor
+      IMPORTING clock TYPE REF TO zif_apg_clock OPTIONAL.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS context_name_journal_entry TYPE string VALUE `JOURNAL_ENTRY`.
+    DATA clock TYPE REF TO zif_apg_clock.
 ENDCLASS.
 
 
 CLASS zcl_apg_act_toggle_sample IMPLEMENTATION.
+
+  METHOD constructor.
+    me->clock = COND #( WHEN clock IS BOUND
+                        THEN clock
+                        ELSE NEW zcl_apg_system_clock( ) ).
+  ENDMETHOD.
 
   METHOD zif_apg_activation_toggle~is_active.
     TRY.
@@ -32,7 +44,7 @@ CLASS zcl_apg_act_toggle_sample IMPLEMENTATION.
     ENDIF.
 
     DATA(journal_entry) = journal_entry_ref->*.
-    result = xsdbool( journal_entry-postingdate <> cl_abap_context_info=>get_system_date( ) ).
+    result = xsdbool( journal_entry-postingdate <> clock->today( ) ).
   ENDMETHOD.
 
 ENDCLASS.

@@ -9,6 +9,12 @@ CLASS zcl_apg_sample_execution DEFINITION
   PUBLIC SECTION.
     INTERFACES zif_apg_handler.
 
+    "! Creates the toggle with the clock it compares the posting date against.
+    "! @parameter clock | Injected in tests; the production default is the system clock
+    METHODS constructor
+      IMPORTING clock TYPE REF TO zif_apg_clock OPTIONAL.
+
+
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS context_name_journal_entry TYPE string VALUE `JOURNAL_ENTRY`.
@@ -20,12 +26,20 @@ CLASS zcl_apg_sample_execution DEFINITION
         type   TYPE bapiret2-type VALUE 'E',
       END OF msg_posting_date_filled.
 
+    DATA clock TYPE REF TO zif_apg_clock.
+
 ENDCLASS.
 
 
 CLASS zcl_apg_sample_execution IMPLEMENTATION.
 
-METHOD zif_apg_handler~execute.
+  METHOD constructor.
+    me->clock = COND #( WHEN clock IS BOUND
+                        THEN clock
+                        ELSE NEW zcl_apg_system_clock( ) ).
+  ENDMETHOD.
+
+  METHOD zif_apg_handler~execute.
     TRY.
         DATA(journal_entry_ref) = CAST i_journalentry( context->get_data( context_name_journal_entry ) ).
       CATCH cx_sy_move_cast_error INTO DATA(conversion_error).
@@ -50,7 +64,7 @@ METHOD zif_apg_handler~execute.
       RETURN.
     ENDIF.
 
-    journal_entry-postingdate = cl_abap_context_info=>get_system_date( ).
+    journal_entry-postingdate = clock->today( ).
     journal_entry_ref->* = journal_entry.
   ENDMETHOD.
 

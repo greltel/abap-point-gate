@@ -1,5 +1,6 @@
 "! <p class="shorttext synchronized" lang="EN">Point type value help</p>
-"! Query provider that serves the fixed values of domain ZAPG_POINT_TYPE.
+"! Query provider that serves the fixed values of data element ZAPG_POINT_TYPE.
+"! The dictionary access itself lives behind {@link zif_apg_domain_values}.
 CLASS zcl_apg_point_type_vh DEFINITION
   PUBLIC
   FINAL
@@ -8,31 +9,49 @@ CLASS zcl_apg_point_type_vh DEFINITION
   PUBLIC SECTION.
     INTERFACES if_rap_query_provider.
 
+    "! Creates the query provider with the source of the fixed values.
+    "! @parameter domain_values | Injected in tests; the production default reads the dictionary
+    METHODS constructor
+      IMPORTING domain_values TYPE REF TO zif_apg_domain_values OPTIONAL.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
-
-    CONSTANTS fallback_language TYPE spras VALUE 'E'.
+    CONSTANTS data_element   TYPE string VALUE `ZAPG_POINT_TYPE`.
+    CONSTANTS filter_element TYPE string VALUE `POINTTYPE`.
 
     TYPES tt_values TYPE STANDARD TABLE OF zi_apg_point_type_vh WITH EMPTY KEY.
 
-    METHODS read_domain_values
+    DATA domain_values TYPE REF TO zif_apg_domain_values.
+
+    "! Maps the dictionary fixed values onto the value-help entity rows.
+    METHODS read_values
       RETURNING VALUE(result) TYPE tt_values.
-
-    METHODS determine_language RETURNING VALUE(result) TYPE spras.
-
 ENDCLASS.
 
 
 CLASS zcl_apg_point_type_vh IMPLEMENTATION.
 
+  METHOD constructor.
+    me->domain_values = COND #( WHEN domain_values IS BOUND
+                                THEN domain_values
+                                ELSE NEW zcl_apg_domain_values( ) ).
+  ENDMETHOD.
+
+  METHOD read_values.
+    result = VALUE #( FOR value IN domain_values->read( data_element )
+                      ( pointtype   = value-code
+                        description = value-description ) ).
+  ENDMETHOD.
+
   METHOD if_rap_query_provider~select.
-    io_request->get_sort_elements( ).
-    io_request->get_paging( ).
-    DATA(values) = read_domain_values( ).
+    " Sorting is deliberately not applied: the set is a handful of dictionary
+    " fixed values delivered in dictionary order, which is the order the value
+    " help is meant to show.
+    DATA(values) = read_values( ).
 
     TRY.
         LOOP AT io_request->get_filter( )->get_as_ranges( ) INTO DATA(filter).
-          IF to_upper( filter-name ) = 'POINTTYPE'.
+          IF to_upper( filter-name ) = filter_element.
             DELETE values WHERE pointtype NOT IN filter-range.
           ENDIF.
         ENDLOOP.
@@ -45,8 +64,8 @@ CLASS zcl_apg_point_type_vh IMPLEMENTATION.
     ENDIF.
 
     IF io_request->is_data_requested( ).
-      DATA(paging) = io_request->get_paging( ).
-      DATA(offset) = CONV i( paging->get_offset( ) ).
+      DATA(paging)    = io_request->get_paging( ).
+      DATA(offset)    = CONV i( paging->get_offset( ) ).
       DATA(page_size) = COND i( WHEN paging->get_page_size( ) = if_rap_query_paging=>page_size_unlimited
                                 THEN lines( values )
                                 ELSE paging->get_page_size( ) ).
@@ -61,31 +80,6 @@ CLASS zcl_apg_point_type_vh IMPLEMENTATION.
 
       io_response->set_data( values ).
     ENDIF.
-  ENDMETHOD.
-
-  METHOD determine_language.
-    TRY.
-        result = cl_abap_context_info=>get_user_language_abap_format( ).
-      CATCH cx_abap_context_info_error.
-        result = fallback_language.
-    ENDTRY.
-  ENDMETHOD.
-
-  METHOD read_domain_values.
-    DATA point_type TYPE zapg_point_type.
-
-    DATA(language) = determine_language( ).
-    DATA(element) = CAST cl_abap_elemdescr( cl_abap_typedescr=>describe_by_data( point_type ) ).
-    DATA(fixed_values) = element->get_ddic_fixed_values( language ).
-
-    IF fixed_values IS INITIAL AND language <> fallback_language.
-      " Domain texts are maintained in English only - fall back
-      fixed_values = element->get_ddic_fixed_values( fallback_language ).
-    ENDIF.
-
-    result = VALUE #( FOR fixed_value IN fixed_values
-                      ( pointtype   = fixed_value-low
-                        description = fixed_value-ddtext ) ).
   ENDMETHOD.
 
 ENDCLASS.
