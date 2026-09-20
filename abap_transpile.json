@@ -1,5 +1,5 @@
 {
-  "_comment": "Off-stack transpile scope: only the runtime classes, interfaces, exception, message class and the DDIC of the configuration tables. Everything RAP (ZBP_*, BDEF, projections, DCL, service binding) and all CDS stays out - the transpiler does not parse it and ADT/ABAP Unit validate it instead.",
+  "_comment": "Off-stack transpile scope: only the runtime classes, interfaces, exception, message class and the DDIC of the configuration tables. Everything RAP (ZBP_*, BDEF, projections, DCL, service binding), all CDS and the custom-entity value-help query classes stay out - the transpiler does not parse them and ADT/ABAP Unit validate them instead.",
   "input_folder": "src",
   "input_filter": [
     "zif_apg_.*\\.intf\\.",
@@ -7,6 +7,9 @@
     "zcx_apg_error\\.clas\\.",
     "zapg\\.msag\\.",
     "zapg_.*\\.(tabl|dtel|doma)\\."
+  ],
+  "exclude_filter": [
+    "zcl_apg_.*_vh\\.clas\\."
   ],
   "output_folder": "output",
   "libs": [
