@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Hardening release. The framework keeps its shape; what changed is that every
 dependency on the outside world now sits behind an interface, the configuration
-business object has an authorization layer, and nothing is left untested.
+business object has an authorization layer, and everything that is not a boundary
+adapter is covered by tests.
 
 ### Added
 
