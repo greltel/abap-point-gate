@@ -33,7 +33,7 @@ business object has an authorization layer, and nothing is left untested.
 - **RAP layer:** `use etag` in the projection, `side effects` on the activation fields,
   `%state_area` state messages in every draft validation, administrative-data facet on
   the Gate entity, and the five missing value helps exposed in the service definition.
-- **94 ABAP Unit tests** across 11 test includes, including RAP validation tests through
+- **66 ABAP Unit tests** across 11 test includes, including RAP validation tests through
   `CL_CDS_TEST_ENVIRONMENT`.
 
 ### Fixed
