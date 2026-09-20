@@ -17,5 +17,6 @@
     <SCRTEXT_L>ABAP Program Name</SCRTEXT_L>
     <DTELMASTER>E</DTELMASTER>
    </DD04V>
-  </asx:abap>
- </abapGit>
+  </asx:values>
+ </asx:abap>
+</abapGit>
