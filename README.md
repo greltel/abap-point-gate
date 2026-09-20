@@ -306,7 +306,7 @@ An injected configuration always wins, even when it is empty on purpose — a te
 
 * Install via [abapGit](http://abapgit.org).
 * ABAP Cloud / Clean Core compatibility. Passed SCI check variants S4HANA_READINESS_2023 and ABAP_CLOUD_READINESS; ATC variant `ABAP_CLOUD_DEVELOPMENT_DEFAULT` with zero priority-1/2 findings.
-* **94 ABAP Unit tests** across 11 test includes: core classes, the factory database path via `CL_OSQL_TEST_ENVIRONMENT`, the value-help query classes, the toggle error paths, and the RAP validations via `CL_CDS_TEST_ENVIRONMENT`. The only untested objects are the two boundary adapters `ZCL_APG_AUTHORIZATION` and `ZCL_APG_SYSTEM_CLOCK`, which exist so that everything else can be doubled.
+* **66 ABAP Unit tests** across 11 test includes: core classes, the factory database path via `CL_OSQL_TEST_ENVIRONMENT`, the value-help query classes, the toggle error paths, and the RAP validations via `CL_CDS_TEST_ENVIRONMENT`. The only untested objects are the two boundary adapters `ZCL_APG_AUTHORIZATION` and `ZCL_APG_SYSTEM_CLOCK`, which exist so that everything else can be doubled.
 * [abaplint](https://github.com/apps/abaplint) runs in GitHub Actions on every push and pull request; the documented rule exceptions live in `abaplint.json`, each with a comment saying why it is there.
 * ABAP Doc on every public declaration; all messages are T100-based (message class `ZAPG`, 000-011) — no hardcoded texts.
 
@@ -315,7 +315,7 @@ An injected configuration always wins, even when it is empty on purpose — a te
 See [CHANGELOG.md](CHANGELOG.md) for the full history.
 
 ### [3.0.0] - 2026-09-20
-Hardening release: authorization layer (authorization object, DCL roles, RAP global and instance authorization), every external dependency moved behind an injectable interface, `%state_area` draft messages, typed RAP messages, side effects, and 94 unit tests. Fixes a context bug that silently discarded all stored values. Contains one breaking change — see the changelog.
+Hardening release: authorization layer (authorization object, DCL roles, RAP global and instance authorization), every external dependency moved behind an injectable interface, `%state_area` draft messages, typed RAP messages, side effects, and 66 unit tests. Fixes a context bug that silently discarded all stored values. Contains one breaking change — see the changelog.
 
 ### [2.0.0] - 2026-08-09
 Full production-hardening rewrite: ABAP Cloud readiness, T100-based error handling, handler parameters, hardened RAP layer (validations, optimistic locking, domain-based value helps), and complete unit-test coverage. Contains breaking API changes — see the changelog.
