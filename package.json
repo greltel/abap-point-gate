@@ -1,21 +1,25 @@
 {
   "name": "abap-point-gate",
   "version": "3.0.0",
-  "description": "Configuration-driven ABAP enhancement framework for ABAP Cloud",
   "private": true,
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/greltel/abap-point-gate.git"
-  },
-  "bugs": {
-    "url": "https://github.com/greltel/abap-point-gate/issues"
+  "description": "Off-stack ABAP project: abaplint + transpiler unit tests",
+  "engines": {
+    "node": ">=22"
   },
   "scripts": {
     "lint": "abaplint",
-    "stats": "abaplint --format total"
+    "lint:fix": "abaplint --fix",
+    "transpile": "rimraf output && abap_transpile",
+    "pretest": "npm run transpile",
+    "test": "node output/index.mjs",
+    "check": "npm run lint && npm test"
   },
   "devDependencies": {
-    "@abaplint/cli": "^2.120.55"
+    "@abaplint/cli": "^2.120.51",
+    "@abaplint/database-sqlite": "^2.13.83",
+    "@abaplint/runtime": "^2.13.86",
+    "@abaplint/transpiler-cli": "^2.13.86",
+    "rimraf": "^6.1.3"
   }
 }
