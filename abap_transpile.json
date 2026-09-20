@@ -10,7 +10,8 @@
   ],
   "exclude_filter": [
     "zcl_apg_.*_vh\\.clas\\.",
-    "zcl_apg_.*sample.*\\.clas\\.testclasses\\."
+    "zcl_apg_.*sample.*\\.clas\\.testclasses\\.",
+    "zcl_apg_domain_values\\.clas\\.testclasses\\."
   ],
   "output_folder": "output",
   "libs": [
