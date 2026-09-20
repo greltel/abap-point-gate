@@ -10,6 +10,7 @@ They exist **only** so the abaplint transpiler can build the SQLite schema of
 * Not linted — `abaplint.json` scopes itself to `/src/**/*.*`.
 * Never imported into a SAP system.
 
-Add a stub here only when the transpiler reports
-`Type of <TABLE>-<FIELD> is VoidType(<DTEL>)`, and keep it as small as the
-type resolution allows: domain + data element, no fixed values, no text table.
+`UnknownType`, and keep it as small as the type resolution allows: a single
+data element carrying `DATATYPE` / `LENG` directly. Do not serialize the
+domain — abaplint only follows `DOMNAME` when `REFKIND` is `D`, so the
+predefined-type form is both shorter and more robust.
