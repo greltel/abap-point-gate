@@ -11,6 +11,10 @@
   "output_folder": "output",
   "libs": [
     {
+      "folder": "offstack/stubs",
+      "files": "/src/**/*.*"
+    },
+    {
       "url": "https://github.com/open-abap/open-abap-core"
     },
     {
