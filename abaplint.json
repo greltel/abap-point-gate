@@ -1,10 +1,16 @@
 {
   "global": {
     "files": "/src/**/*.*",
+    "_comment_exclude": "The behavior pool follows the RAP testing pattern: DEFERRED FOR TESTING, CREATE OBJECT ... FOR TESTING, TYPE RESPONSE FOR ... LATE, CL_CDS_TEST_ENVIRONMENT. abaplint parses none of them. These two includes are validated by ADT activation and ABAP Unit instead.",
+    "exclude": [
+      "zbp_r_apg_point\\.clas\\.locals_imp\\.abap$",
+      "zbp_r_apg_point\\.clas\\.testclasses\\.abap$"
+    ],
     "skipGeneratedGatewayClasses": true,
     "skipGeneratedPersistentClasses": true,
     "skipGeneratedFunctionGroups": true
   },
+  "_comment_dependencies": "This is the BTP ABAP Environment released set, not the S/4HANA 2023 on-stack one. It is the closest available: objects released on S/4 but not on BTP (I_JournalEntry, CL_CDS_TEST_ENVIRONMENT) show up as void here, so release status is confirmed in the ADT API State tab, not by this linter.",
   "dependencies": [
     {
       "url": "https://github.com/abapedia/steampunk-2302-api",
@@ -14,6 +20,7 @@
   ],
   "syntax": {
     "version": "Cloud",
+    "release": "758",
     "errorNamespace": "^(Z|Y)"
   },
   "rules": {
@@ -63,6 +70,7 @@
     "unsecure_fae": true,
     "select_single_full_key": true,
     "no_prefixes": {
+      "_comment": "The types check is deliberately disabled: it contradicts types_naming below, and the project uses the TY_ / TT_ convention on purpose",
       "types": "^ZZ_NEVER_MATCH_"
     },
     "prefer_inline": true,
@@ -77,6 +85,7 @@
     "use_bool_expression": true,
     "use_class_based_exceptions": true,
     "no_yoda_conditions": {
+      "_comment": "Still needed: abaplint reads 'field <> method( )' in ZIF_APG_ACTIVATION_TOGGLE~IS_ACTIVE as a Yoda condition",
       "exclude": ["zcl_apg_act_toggle_sample.clas.abap"]
     },
     "preferred_compare_operator": true,
@@ -119,8 +128,10 @@
     "empty_statement": true,
     "empty_structure": true,
     "unused_variables": {
+      "_comment": "zcm_ holds the message catalog of a BO - a textid may legitimately have no caller yet, and its only consumer (the behavior pool) is not parsed by abaplint",
       "exclude": [
-        "zbp_.*"
+        "zbp_.*",
+        "zcm_.*"
       ]
     },
     "unused_types": true,
@@ -136,14 +147,16 @@
       "classDefinition": true,
       "interfaceDefinition": true,
       "ignoreTestClasses": true,
-      "checkLocal": false
+      "checkLocal": true
     },
     "description_empty": true,
     "identical_descriptions": true,
     "check_text_elements": true,
     "easy_to_find_messages": false,
     "message_exists": true,
-    "local_testclass_consistency": true,
+    "local_testclass_consistency": {
+      "exclude": ["zbp_r_apg_point\\.clas\\.abap$"]
+    },
     "add_test_attributes": true,
     "no_external_form_calls": true,
     "local_class_naming": {
@@ -154,6 +167,7 @@
     "types_naming": {
      "pattern": "^(TY|TT)_.+$"
     },
+    "_comment_naming": "These three stay off on purpose: their defaults demand Hungarian notation (^I._, ^L._, ^M._), which is the opposite of the coding standard. no_prefixes above is what enforces the rule.",
     "method_parameter_names": false,
     "local_variable_names": false,
     "class_attribute_names": false,
@@ -173,9 +187,7 @@
     },
     "max_one_statement": true,
     "keyword_case": true,
-    "indentation": {
-      "exclude": ["zcl_apg_sample_execution.clas.abap"]
-    },
+    "indentation": true,
     "in_statement_indentation": true,
     "start_at_tab": true,
     "contains_tab": true,
