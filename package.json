@@ -1,0 +1,21 @@
+{
+  "name": "abap-point-gate",
+  "version": "3.0.0",
+  "description": "Configuration-driven ABAP enhancement framework for ABAP Cloud",
+  "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/greltel/abap-point-gate.git"
+  },
+  "bugs": {
+    "url": "https://github.com/greltel/abap-point-gate/issues"
+  },
+  "scripts": {
+    "lint": "abaplint",
+    "stats": "abaplint --format total"
+  },
+  "devDependencies": {
+    "@abaplint/cli": "^2.120.55"
+  }
+}
