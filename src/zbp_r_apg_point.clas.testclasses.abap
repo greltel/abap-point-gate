@@ -225,3 +225,171 @@ CLASS ltc_point_factory IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+
+CLASS ltc_gate_validations DEFINITION
+  FINAL FOR TESTING
+  DURATION SHORT
+  RISK LEVEL HARMLESS.
+
+  PRIVATE SECTION.
+    CONSTANTS point_id       TYPE zapg_point_id VALUE 'TEST_POINT'.
+    CONSTANTS seqno          TYPE zapg_seqno VALUE '001'.
+    CONSTANTS sample_handler TYPE zapg_handler_class VALUE 'ZCL_APG_SAMPLE_EXECUTION'.
+
+    CLASS-DATA cds_environment TYPE REF TO if_cds_test_environment.
+
+    DATA cut TYPE REF TO lhc_gate.
+
+    " The RAP response types are only valid in DATA declarations, not in a
+    " method signature - the helper writes into these instead of exporting
+    DATA failed   TYPE RESPONSE FOR FAILED   LATE zr_apg_point.
+    DATA reported TYPE RESPONSE FOR REPORTED LATE zr_apg_point.
+
+    CLASS-METHODS class_setup.
+    CLASS-METHODS class_teardown.
+    METHODS setup.
+    METHODS teardown.
+
+    "! Puts one gate into the doubled persistent table.
+    METHODS given_gate
+      IMPORTING handler_class TYPE zapg_handler_class DEFAULT sample_handler.
+
+    "! Runs the validation - the outcome lands in failed / reported.
+    METHODS when_validated
+      IMPORTING class_exists         TYPE abap_bool DEFAULT abap_true
+                implements_interface TYPE abap_bool DEFAULT abap_true.
+
+    METHODS given_no_handler_then_fails  FOR TESTING RAISING cx_static_check.
+    METHODS given_unknown_then_fails     FOR TESTING RAISING cx_static_check.
+    METHODS given_non_handler_then_fails FOR TESTING RAISING cx_static_check.
+    METHODS given_valid_then_passes      FOR TESTING RAISING cx_static_check.
+    METHODS given_failure_marks_element  FOR TESTING RAISING cx_static_check.
+ENDCLASS.
+
+
+CLASS ltc_gate_validations IMPLEMENTATION.
+
+  METHOD class_setup.
+    " The managed runtime fills the buffer from the persistent table, so the
+    " base dependencies have to be doubled together with the view entities
+    cds_environment = cl_cds_test_environment=>create_for_multiple_cds(
+        i_for_entities = VALUE #(
+            ( i_for_entity = 'ZR_APG_POINT'      i_select_base_dependencies = abap_true )
+            ( i_for_entity = 'ZR_APG_GATEHANDLE' i_select_base_dependencies = abap_true ) ) ).
+  ENDMETHOD.
+
+  METHOD class_teardown.
+    cds_environment->destroy( ).
+  ENDMETHOD.
+
+  METHOD setup.
+    cds_environment->clear_doubles( ).
+    CREATE OBJECT cut FOR TESTING.
+  ENDMETHOD.
+
+  METHOD teardown.
+    cds_environment->clear_doubles( ).
+    lcl_point_factory=>inject_class_inspector( VALUE #( ) ).
+  ENDMETHOD.
+
+  METHOD given_gate.
+    DATA points TYPE STANDARD TABLE OF zapg_point WITH EMPTY KEY.
+    DATA gates  TYPE STANDARD TABLE OF zapg_gate_handle WITH EMPTY KEY.
+
+    points = VALUE #( ( point_id = point_id
+                        active   = zcl_apg_factory=>activation_status-active ) ).
+    gates  = VALUE #( ( point_id      = point_id
+                        seqno         = seqno
+                        handler_class = handler_class
+                        active        = zcl_apg_factory=>activation_status-active ) ).
+
+    cds_environment->insert_test_data( points ).
+    cds_environment->insert_test_data( gates ).
+  ENDMETHOD.
+
+  METHOD when_validated.
+    lcl_point_factory=>inject_class_inspector( NEW ltd_class_inspector(
+                                                   class_exists         = class_exists
+                                                   implements_interface = implements_interface ) ).
+
+    cut->validatehandlerclass(
+        EXPORTING keys     = VALUE #( ( %is_draft = if_abap_behv=>mk-off
+                                        pointid   = point_id
+                                        seqno     = seqno ) )
+        CHANGING  failed   = failed
+                  reported = reported ).
+  ENDMETHOD.
+
+  METHOD given_no_handler_then_fails.
+    " ARRANGE
+    given_gate( space ).
+
+    " ACT
+    when_validated( ).
+
+    " ASSERT
+    cl_abap_unit_assert=>assert_equals( act = lines( failed-gate )
+                                        exp = 1
+                                        msg = `A gate without a handler class must fail` ).
+    DATA(message) = CAST zcm_apg_point( reported-gate[ 1 ]-%msg ).
+    cl_abap_unit_assert=>assert_equals( act = message->if_t100_message~t100key
+                                        exp = zcm_apg_point=>handler_class_required
+                                        msg = `An empty handler class must report handler_class_required` ).
+  ENDMETHOD.
+
+  METHOD given_unknown_then_fails.
+    " ARRANGE
+    given_gate( ).
+
+    " ACT
+    when_validated( class_exists = abap_false ).
+
+    " ASSERT
+    DATA(message) = CAST zcm_apg_point( reported-gate[ 1 ]-%msg ).
+    cl_abap_unit_assert=>assert_equals( act = message->if_t100_message~t100key
+                                        exp = zcm_apg_point=>class_not_found
+                                        msg = `A handler class that does not exist must report class_not_found` ).
+  ENDMETHOD.
+
+  METHOD given_non_handler_then_fails.
+    " ARRANGE
+    given_gate( ).
+
+    " ACT
+    when_validated( implements_interface = abap_false ).
+
+    " ASSERT
+    DATA(message) = CAST zcm_apg_point( reported-gate[ 1 ]-%msg ).
+    cl_abap_unit_assert=>assert_equals( act = message->if_t100_message~t100key
+                                        exp = zcm_apg_point=>interface_not_implemented
+                                        msg = `A class that is not a handler must report interface_not_implemented` ).
+  ENDMETHOD.
+
+  METHOD given_valid_then_passes.
+    " ARRANGE
+    given_gate( ).
+
+    " ACT
+    when_validated( ).
+
+    " ASSERT
+    cl_abap_unit_assert=>assert_initial( act = failed-gate
+                                         msg = `A valid handler class must not fail the gate` ).
+    cl_abap_unit_assert=>assert_initial( act = reported-gate
+                                         msg = `A valid handler class must not report anything` ).
+  ENDMETHOD.
+
+  METHOD given_failure_marks_element.
+    " ARRANGE
+    given_gate( space ).
+
+    " ACT
+    when_validated( ).
+
+    " ASSERT - the UI can only highlight the field when it is marked
+    cl_abap_unit_assert=>assert_equals( act = reported-gate[ 1 ]-%element-handlerclass
+                                        exp = if_abap_behv=>mk-on
+                                        msg = `The offending field must be marked so the UI can highlight it` ).
+  ENDMETHOD.
+
+ENDCLASS.

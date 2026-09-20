@@ -107,8 +107,10 @@ CLASS lcl_point_factory IMPLEMENTATION.
 
 ENDCLASS.
 
+CLASS ltc_gate_validations DEFINITION DEFERRED FOR TESTING.
 
-CLASS lhc_gate DEFINITION INHERITING FROM cl_abap_behavior_handler.
+CLASS lhc_gate DEFINITION INHERITING FROM cl_abap_behavior_handler
+  FRIENDS ltc_gate_validations.
   PRIVATE SECTION.
     METHODS validatehandlerclass FOR VALIDATE ON SAVE
       IMPORTING keys FOR gate~validatehandlerclass.
