@@ -61,14 +61,16 @@ CLASS zcl_apg_injector DEFINITION
       IMPORTING point_id      TYPE zapg_point_id
       RETURNING VALUE(result) TYPE tt_configurations.
 
-    "! Removes all injected doubles and configurations.
+    "! Registers a class inspector, replacing the repository inspector.
+    "! @parameter class_inspector | Inspector to use; pass an unbound reference to restore the default
+    CLASS-METHODS inject_class_inspector
+      IMPORTING class_inspector TYPE REF TO zif_apg_class_inspector.
+
+    "! Removes all injected doubles, configurations and inspectors.
     CLASS-METHODS clear.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
-    CONSTANTS handler_interface_name TYPE string VALUE `ZIF_APG_HANDLER`.
-    CONSTANTS toggle_interface_name  TYPE string VALUE `ZIF_APG_ACTIVATION_TOGGLE`.
-
     TYPES: BEGIN OF ty_mock,
              classname TYPE abap_classname,
              instance  TYPE REF TO object,
@@ -81,8 +83,18 @@ CLASS zcl_apg_injector DEFINITION
            END OF ty_mock_configuration,
            ty_mock_configurations TYPE HASHED TABLE OF ty_mock_configuration WITH UNIQUE KEY point_id.
 
-    CLASS-DATA mocks               TYPE ty_mocks.
-    CLASS-DATA mock_configurations TYPE ty_mock_configurations.
+    CLASS-DATA mocks                    TYPE ty_mocks.
+    CLASS-DATA mock_configurations      TYPE ty_mock_configurations.
+    CLASS-DATA class_inspector_override TYPE REF TO zif_apg_class_inspector.
+
+    CLASS-METHODS class_inspector
+      RETURNING VALUE(result) TYPE REF TO zif_apg_class_inspector.
+
+    "! Raises the error that explains why the class cannot serve the interface.
+    CLASS-METHODS check_usable
+      IMPORTING classname TYPE abap_classname
+                interface TYPE abap_classname
+      RAISING   zcx_apg_error.
 
     CLASS-METHODS get_mock
       IMPORTING classname     TYPE abap_classname
@@ -100,11 +112,14 @@ CLASS zcl_apg_injector IMPLEMENTATION.
         CATCH cx_sy_move_cast_error INTO DATA(cast_error).
           RAISE EXCEPTION NEW zcx_apg_error( textid         = zcx_apg_error=>interface_not_implemented
                                              class_name     = |{ classname }|
-                                             interface_name = handler_interface_name
+                                             interface_name = |{ zif_apg_class_inspector=>interface-handler }|
                                              previous       = cast_error ).
       ENDTRY.
       RETURN.
     ENDIF.
+
+    check_usable( classname = classname
+                  interface = zif_apg_class_inspector=>interface-handler ).
 
     TRY.
         " Dynamic instantiation: NEW cannot take a runtime type name
@@ -124,11 +139,14 @@ CLASS zcl_apg_injector IMPLEMENTATION.
         CATCH cx_sy_move_cast_error INTO DATA(cast_error).
           RAISE EXCEPTION NEW zcx_apg_error( textid         = zcx_apg_error=>interface_not_implemented
                                              class_name     = |{ classname }|
-                                             interface_name = toggle_interface_name
+                                             interface_name = |{ zif_apg_class_inspector=>interface-toggle }|
                                              previous       = cast_error ).
       ENDTRY.
       RETURN.
     ENDIF.
+
+    check_usable( classname = classname
+                  interface = zif_apg_class_inspector=>interface-toggle ).
 
     TRY.
         " Dynamic instantiation: NEW cannot take a runtime type name
@@ -156,9 +174,36 @@ CLASS zcl_apg_injector IMPLEMENTATION.
     result = VALUE #( mock_configurations[ point_id = point_id ]-configurations OPTIONAL ).
   ENDMETHOD.
 
+  METHOD inject_class_inspector.
+    class_inspector_override = class_inspector.
+  ENDMETHOD.
+
   METHOD clear.
     CLEAR: mocks,
-           mock_configurations.
+           mock_configurations,
+           class_inspector_override.
+  ENDMETHOD.
+
+  METHOD class_inspector.
+    result = COND #( WHEN class_inspector_override IS BOUND
+                     THEN class_inspector_override
+                     ELSE NEW zcl_apg_class_inspector( ) ).
+  ENDMETHOD.
+
+  METHOD check_usable.
+    DATA(inspector) = class_inspector( ).
+
+    IF inspector->is_class( classname ) = abap_false.
+      RAISE EXCEPTION NEW zcx_apg_error( textid     = zcx_apg_error=>class_not_found
+                                         class_name = |{ classname }| ).
+    ENDIF.
+
+    IF inspector->implements( classname = classname
+                              interface = interface ) = abap_false.
+      RAISE EXCEPTION NEW zcx_apg_error( textid         = zcx_apg_error=>interface_not_implemented
+                                         class_name     = |{ classname }|
+                                         interface_name = |{ interface }| ).
+    ENDIF.
   ENDMETHOD.
 
   METHOD get_mock.

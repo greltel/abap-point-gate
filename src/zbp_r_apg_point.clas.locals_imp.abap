@@ -1,126 +1,85 @@
-"! Read-only inspector for global class metadata used by the validations.
-CLASS lcl_class_inspector DEFINITION FINAL CREATE PRIVATE.
-  PUBLIC SECTION.
-    CONSTANTS handler_interface TYPE abap_classname VALUE 'ZIF_APG_HANDLER'.
-    CONSTANTS toggle_interface  TYPE abap_classname VALUE 'ZIF_APG_ACTIVATION_TOGGLE'.
-
-    "! Returns abap_true if the name refers to an existing global class.
-    CLASS-METHODS is_class
-      IMPORTING classname     TYPE clike
-      RETURNING VALUE(result) TYPE abap_bool.
-
-    "! Returns abap_true if the class implements the given interface.
-    CLASS-METHODS implements
-      IMPORTING classname     TYPE clike
-                interface     TYPE abap_classname
-      RETURNING VALUE(result) TYPE abap_bool.
-ENDCLASS.
-
-
-CLASS lcl_class_inspector IMPLEMENTATION.
-
-  METHOD is_class.
-    cl_abap_typedescr=>describe_by_name(
-          EXPORTING
-            p_name         = classname
-          RECEIVING
-            p_descr_ref    = DATA(descriptor)
-          EXCEPTIONS
-            type_not_found = 1
-            OTHERS         = 2 ).
-    " Fail closed: any lookup problem counts as "class does not exist"
-    result = xsdbool( sy-subrc = 0 AND descriptor->kind = cl_abap_typedescr=>kind_class ).
-  ENDMETHOD.
-
-  METHOD implements.
-    cl_abap_typedescr=>describe_by_name(
-          EXPORTING
-            p_name         = classname
-          RECEIVING
-            p_descr_ref    = DATA(descriptor)
-          EXCEPTIONS
-            type_not_found = 1
-            OTHERS         = 2 ).
-    IF sy-subrc <> 0 OR descriptor->kind <> cl_abap_typedescr=>kind_class.
-      " fail closed
-      RETURN.
-    ENDIF.
-
-    DATA(class_descriptor) = CAST cl_abap_classdescr( descriptor ).
-    result = xsdbool( line_exists( class_descriptor->interfaces[ name = interface ] ) ).
-  ENDMETHOD.
-
-ENDCLASS.
-
-
 "! Shared rule set for the Active / ActivationClass field pair.
-CLASS lcl_activation_check DEFINITION FINAL CREATE PRIVATE.
+CLASS lcl_activation_check DEFINITION FINAL CREATE PUBLIC.
   PUBLIC SECTION.
-    TYPES tt_findings TYPE STANDARD TABLE OF symsg WITH EMPTY KEY.
+    "! One rule violation, named by the message it maps to
+    TYPES: BEGIN OF ty_finding,
+             textid     LIKE if_t100_message=>t100key,
+             class_name TYPE string,
+           END OF ty_finding.
+    TYPES tt_findings TYPE STANDARD TABLE OF ty_finding WITH EMPTY KEY.
+
+    "! @parameter class_inspector | Resolves whether the activation class is usable
+    METHODS constructor
+      IMPORTING class_inspector TYPE REF TO zif_apg_class_inspector.
 
     "! Returns the findings for the given field pair (empty = valid).
-    CLASS-METHODS check
+    METHODS check
       IMPORTING active           TYPE zapg_active
                 activation_class TYPE zapg_activation_class
       RETURNING VALUE(result)    TYPE tt_findings.
 
   PRIVATE SECTION.
-    CONSTANTS message_class TYPE symsgid VALUE 'ZAPG'.
+    DATA class_inspector TYPE REF TO zif_apg_class_inspector.
 ENDCLASS.
 
 
 CLASS lcl_activation_check IMPLEMENTATION.
 
+  METHOD constructor.
+    me->class_inspector = class_inspector.
+  ENDMETHOD.
+
   METHOD check.
     IF active <> zcl_apg_factory=>activation_status-custom_toggle.
       IF activation_class IS NOT INITIAL.
-        result = VALUE #( ( msgid = message_class
-                            msgno = '007'
-                            msgv1 = activation_class ) ).
+        result = VALUE #( ( textid     = zcm_apg_point=>activation_class_not_allowed
+                            class_name = |{ activation_class }| ) ).
       ENDIF.
       RETURN.
     ENDIF.
 
     IF activation_class IS INITIAL.
-      result = VALUE #( ( msgid = message_class
-                          msgno = '006' ) ).
+      result = VALUE #( ( textid = zcm_apg_point=>activation_class_required ) ).
       RETURN.
     ENDIF.
 
-    IF lcl_class_inspector=>is_class( activation_class ) = abap_false.
-      result = VALUE #( ( msgid = message_class
-                          msgno = '001'
-                          msgv1 = activation_class ) ).
+    IF class_inspector->is_class( activation_class ) = abap_false.
+      result = VALUE #( ( textid     = zcm_apg_point=>class_not_found
+                          class_name = |{ activation_class }| ) ).
       RETURN.
     ENDIF.
 
-    IF lcl_class_inspector=>implements( classname = activation_class
-                                        interface = lcl_class_inspector=>toggle_interface ) = abap_false.
-      result = VALUE #( ( msgid = message_class
-                          msgno = '002'
-                          msgv1 = activation_class
-                          msgv2 = lcl_class_inspector=>toggle_interface ) ).
+    IF class_inspector->implements( classname = activation_class
+                                    interface = zif_apg_class_inspector=>interface-toggle ) = abap_false.
+      result = VALUE #( ( textid     = zcm_apg_point=>interface_not_implemented
+                          class_name = |{ activation_class }| ) ).
     ENDIF.
   ENDMETHOD.
 
 ENDCLASS.
 
 
-"! Composition root of the behavior pool. The framework instantiates the
-"! handler classes, so collaborators are resolved here instead of through a
-"! constructor. The static overrides are test infrastructure, not state.
 CLASS lcl_point_factory DEFINITION FINAL CREATE PRIVATE.
   PUBLIC SECTION.
     "! Returns the authorization adapter, or the injected double.
     CLASS-METHODS authorization
       RETURNING VALUE(result) TYPE REF TO zif_apg_authorization.
 
+    "! Returns the class inspector, or the injected double.
+    CLASS-METHODS class_inspector
+      RETURNING VALUE(result) TYPE REF TO zif_apg_class_inspector.
+
     "! Test hook - pass an unbound reference to restore the production default.
     CLASS-METHODS inject_authorization
       IMPORTING authorization TYPE REF TO zif_apg_authorization.
 
+    "! Test hook - pass an unbound reference to restore the production default.
+    CLASS-METHODS inject_class_inspector
+      IMPORTING class_inspector TYPE REF TO zif_apg_class_inspector.
+
   PRIVATE SECTION.
-    CLASS-DATA authorization_override TYPE REF TO zif_apg_authorization.
+    CLASS-DATA authorization_override   TYPE REF TO zif_apg_authorization.
+    CLASS-DATA class_inspector_override TYPE REF TO zif_apg_class_inspector.
 ENDCLASS.
 
 
@@ -132,8 +91,18 @@ CLASS lcl_point_factory IMPLEMENTATION.
                      ELSE NEW zcl_apg_authorization( ) ).
   ENDMETHOD.
 
+  METHOD class_inspector.
+    result = COND #( WHEN class_inspector_override IS BOUND
+                     THEN class_inspector_override
+                     ELSE NEW zcl_apg_class_inspector( ) ).
+  ENDMETHOD.
+
   METHOD inject_authorization.
     authorization_override = authorization.
+  ENDMETHOD.
+
+  METHOD inject_class_inspector.
+    class_inspector_override = class_inspector.
   ENDMETHOD.
 
 ENDCLASS.
@@ -141,8 +110,6 @@ ENDCLASS.
 
 CLASS lhc_gate DEFINITION INHERITING FROM cl_abap_behavior_handler.
   PRIVATE SECTION.
-    CONSTANTS message_class TYPE symsgid VALUE 'ZAPG'.
-
     METHODS validatehandlerclass FOR VALIDATE ON SAVE
       IMPORTING keys FOR gate~validatehandlerclass.
 
@@ -160,39 +127,32 @@ CLASS lhc_gate IMPLEMENTATION.
          WITH CORRESPONDING #( keys )
          RESULT DATA(gates).
 
+    DATA(class_inspector) = lcl_point_factory=>class_inspector( ).
+
     LOOP AT gates INTO DATA(gate).
+      DATA(finding) = VALUE lcl_activation_check=>ty_finding( ).
+
       IF gate-handlerclass IS INITIAL.
-        INSERT VALUE #( %tky = gate-%tky ) INTO TABLE failed-gate.
-        INSERT VALUE #( %tky                  = gate-%tky
-                        %msg                  = new_message( id       = message_class
-                                                             number   = '009'
-                                                             severity = if_abap_behv_message=>severity-error )
-                        %element-handlerclass = if_abap_behv=>mk-on ) INTO TABLE reported-gate.
+        finding-textid = zcm_apg_point=>handler_class_required.
+      ELSEIF class_inspector->is_class( gate-handlerclass ) = abap_false.
+        finding = VALUE #( textid     = zcm_apg_point=>class_not_found
+                           class_name = |{ gate-handlerclass }| ).
+      ELSEIF class_inspector->implements( classname = gate-handlerclass
+                                          interface = zif_apg_class_inspector=>interface-handler ) = abap_false.
+        finding = VALUE #( textid     = zcm_apg_point=>interface_not_implemented
+                           class_name = |{ gate-handlerclass }| ).
+      ELSE.
         CONTINUE.
       ENDIF.
 
-      IF lcl_class_inspector=>is_class( gate-handlerclass ) = abap_false.
-        INSERT VALUE #( %tky = gate-%tky ) INTO TABLE failed-gate.
-        INSERT VALUE #( %tky                  = gate-%tky
-                        %msg                  = new_message( id       = message_class
-                                                             number   = '001'
-                                                             severity = if_abap_behv_message=>severity-error
-                                                             v1       = gate-handlerclass )
-                        %element-handlerclass = if_abap_behv=>mk-on ) INTO TABLE reported-gate.
-        CONTINUE.
-      ENDIF.
-
-      IF lcl_class_inspector=>implements( classname = gate-handlerclass
-                                          interface = lcl_class_inspector=>handler_interface ) = abap_false.
-        INSERT VALUE #( %tky = gate-%tky ) INTO TABLE failed-gate.
-        INSERT VALUE #( %tky                  = gate-%tky
-                        %msg                  = new_message( id       = message_class
-                                                             number   = '002'
-                                                             severity = if_abap_behv_message=>severity-error
-                                                             v1       = gate-handlerclass
-                                                             v2       = lcl_class_inspector=>handler_interface )
-                        %element-handlerclass = if_abap_behv=>mk-on ) INTO TABLE reported-gate.
-      ENDIF.
+      INSERT VALUE #( %tky = gate-%tky ) INTO TABLE failed-gate.
+      INSERT VALUE #( %tky                  = gate-%tky
+                      %msg                  = NEW zcm_apg_point(
+                                                  severity       = if_abap_behv_message=>severity-error
+                                                  textid         = finding-textid
+                                                  class_name     = finding-class_name
+                                                  interface_name = |{ zif_apg_class_inspector=>interface-handler }| )
+                      %element-handlerclass = if_abap_behv=>mk-on ) INTO TABLE reported-gate.
     ENDLOOP.
   ENDMETHOD.
 
@@ -203,114 +163,22 @@ CLASS lhc_gate IMPLEMENTATION.
          WITH CORRESPONDING #( keys )
          RESULT DATA(gates).
 
+    DATA(activation_check)  = NEW lcl_activation_check( lcl_point_factory=>class_inspector( ) ).
+    DATA(toggle_interface)  = |{ zif_apg_class_inspector=>interface-toggle }|.
+
     LOOP AT gates INTO DATA(gate).
-      DATA(findings) = lcl_activation_check=>check( active           = gate-active
-                                                    activation_class = gate-activationclass ).
+      DATA(findings) = activation_check->check( active           = gate-active
+                                                activation_class = gate-activationclass ).
 
       LOOP AT findings INTO DATA(finding).
         INSERT VALUE #( %tky = gate-%tky ) INTO TABLE failed-gate.
         INSERT VALUE #( %tky                     = gate-%tky
-                        %msg                     = new_message( id       = finding-msgid
-                                                                number   = finding-msgno
-                                                                severity = if_abap_behv_message=>severity-error
-                                                                v1       = finding-msgv1
-                                                                v2       = finding-msgv2 )
+                        %msg                     = NEW zcm_apg_point(
+                                                        severity       = if_abap_behv_message=>severity-error
+                                                        textid         = finding-textid
+                                                        class_name     = finding-class_name
+                                                        interface_name = toggle_interface )
                         %element-activationclass = if_abap_behv=>mk-on ) INTO TABLE reported-gate.
-      ENDLOOP.
-    ENDLOOP.
-  ENDMETHOD.
-
-ENDCLASS.
-
-
-CLASS lhc_point DEFINITION INHERITING FROM cl_abap_behavior_handler.
-  PRIVATE SECTION.
-    METHODS get_global_authorizations FOR GLOBAL AUTHORIZATION
-      IMPORTING REQUEST requested_authorizations FOR point RESULT result.
-
-    METHODS get_instance_authorizations FOR INSTANCE AUTHORIZATION
-      IMPORTING keys REQUEST requested_authorizations FOR point RESULT result.
-
-    METHODS validateactivationclass FOR VALIDATE ON SAVE
-      IMPORTING keys FOR point~validateactivationclass.
-ENDCLASS.
-
-
-CLASS lhc_point IMPLEMENTATION.
-
-  METHOD get_global_authorizations.
-    DATA(authorization) = lcl_point_factory=>authorization( ).
-
-    IF requested_authorizations-%create = if_abap_behv=>mk-on.
-      result-%create = COND #(
-          WHEN authorization->is_allowed( zif_apg_authorization=>activity-create ) = abap_true
-          THEN if_abap_behv=>auth-allowed
-          ELSE if_abap_behv=>auth-unauthorized ).
-    ENDIF.
-
-    IF requested_authorizations-%update = if_abap_behv=>mk-on.
-      result-%update = COND #(
-          WHEN authorization->is_allowed( zif_apg_authorization=>activity-change ) = abap_true
-          THEN if_abap_behv=>auth-allowed
-          ELSE if_abap_behv=>auth-unauthorized ).
-    ENDIF.
-
-    IF requested_authorizations-%delete = if_abap_behv=>mk-on.
-      result-%delete = COND #(
-          WHEN authorization->is_allowed( zif_apg_authorization=>activity-delete ) = abap_true
-          THEN if_abap_behv=>auth-allowed
-          ELSE if_abap_behv=>auth-unauthorized ).
-    ENDIF.
-  ENDMETHOD.
-
-  METHOD get_instance_authorizations.
-    READ ENTITIES OF zr_apg_point IN LOCAL MODE
-         ENTITY point
-         FIELDS ( pointid )
-         WITH CORRESPONDING #( keys )
-         RESULT DATA(points).
-
-    DATA(authorization) = lcl_point_factory=>authorization( ).
-
-    LOOP AT points INTO DATA(point).
-      DATA(may_change) = authorization->is_allowed_for_point(
-                             activity = zif_apg_authorization=>activity-change
-                             point_id = point-pointid ).
-      DATA(may_delete) = authorization->is_allowed_for_point(
-                             activity = zif_apg_authorization=>activity-delete
-                             point_id = point-pointid ).
-
-      INSERT VALUE #( %tky    = point-%tky
-                      %update = COND #( WHEN may_change = abap_true
-                                        THEN if_abap_behv=>auth-allowed
-                                        ELSE if_abap_behv=>auth-unauthorized )
-                      %delete = COND #( WHEN may_delete = abap_true
-                                        THEN if_abap_behv=>auth-allowed
-                                        ELSE if_abap_behv=>auth-unauthorized ) )
-        INTO TABLE result.
-    ENDLOOP.
-  ENDMETHOD.
-
-  METHOD validateactivationclass.
-    READ ENTITIES OF zr_apg_point IN LOCAL MODE
-         ENTITY point
-         FIELDS ( active activationclass )
-         WITH CORRESPONDING #( keys )
-         RESULT DATA(points).
-
-    LOOP AT points INTO DATA(point).
-      DATA(findings) = lcl_activation_check=>check( active           = point-active
-                                                    activation_class = point-activationclass ).
-
-      LOOP AT findings INTO DATA(finding).
-        INSERT VALUE #( %tky = point-%tky ) INTO TABLE failed-point.
-        INSERT VALUE #( %tky                     = point-%tky
-                        %msg                     = new_message( id       = finding-msgid
-                                                                number   = finding-msgno
-                                                                severity = if_abap_behv_message=>severity-error
-                                                                v1       = finding-msgv1
-                                                                v2       = finding-msgv2 )
-                        %element-activationclass = if_abap_behv=>mk-on ) INTO TABLE reported-point.
       ENDLOOP.
     ENDLOOP.
   ENDMETHOD.

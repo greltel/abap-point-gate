@@ -5,12 +5,16 @@
 CLASS zcl_apg_execution DEFINITION
   PUBLIC
   FINAL
-  CREATE PRIVATE.
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
+    INTERFACES zif_apg_execution.
+
     TYPES tt_messages TYPE zif_apg_handler=>tt_messages.
 
-    "! Executes all active handlers of the point in sequence order.
+    "! Convenience entry point for consumers that never substitute the
+    "! framework. Delegates to a new instance of this class; consumers that
+    "! want to double the framework depend on {@link zif_apg_execution}.
     "! @parameter point_id | Point to execute
     "! @parameter context  | Shared execution context
     "! @parameter messages | Message container filled by the handlers
@@ -34,6 +38,14 @@ ENDCLASS.
 CLASS zcl_apg_execution IMPLEMENTATION.
 
   METHOD execute_gate.
+    DATA(execution) = NEW zcl_apg_execution( ).
+
+    execution->zif_apg_execution~execute_gate( EXPORTING point_id = point_id
+                                                         context  = context
+                                               CHANGING  messages = messages ).
+  ENDMETHOD.
+
+  METHOD zif_apg_execution~execute_gate.
     DATA(handlers) = zcl_apg_factory=>get_active_handlers_for_gate( point_id = point_id
                                                                     context  = context ).
 
