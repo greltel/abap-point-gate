@@ -1,0 +1,16 @@
+# Node.js - abaplint CLI only, the ABAP source is never built here
+node_modules/
+package-lock.json.bak
+npm-debug.log*
+
+# abaplint clones its API dependencies here on every run
+/deps/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
