@@ -331,7 +331,8 @@ CLASS ltc_gate_validations IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals( act = lines( failed-gate )
                                         exp = 1
                                         msg = `A gate without a handler class must fail` ).
-    DATA(message) = CAST zcm_apg_point( reported-gate[ 1 ]-%msg ).
+    " entry 1 only resets the state area, the message follows it
+    DATA(message) = CAST zcm_apg_point( reported-gate[ 2 ]-%msg ).
     cl_abap_unit_assert=>assert_equals( act = message->if_t100_message~t100key
                                         exp = zcm_apg_point=>handler_class_required
                                         msg = `An empty handler class must report handler_class_required` ).
@@ -345,7 +346,8 @@ CLASS ltc_gate_validations IMPLEMENTATION.
     when_validated( class_exists = abap_false ).
 
     " ASSERT
-    DATA(message) = CAST zcm_apg_point( reported-gate[ 1 ]-%msg ).
+    " entry 1 only resets the state area, the message follows it
+    DATA(message) = CAST zcm_apg_point( reported-gate[ 2 ]-%msg ).
     cl_abap_unit_assert=>assert_equals( act = message->if_t100_message~t100key
                                         exp = zcm_apg_point=>class_not_found
                                         msg = `A handler class that does not exist must report class_not_found` ).
@@ -359,7 +361,8 @@ CLASS ltc_gate_validations IMPLEMENTATION.
     when_validated( implements_interface = abap_false ).
 
     " ASSERT
-    DATA(message) = CAST zcm_apg_point( reported-gate[ 1 ]-%msg ).
+    " entry 1 only resets the state area, the message follows it
+    DATA(message) = CAST zcm_apg_point( reported-gate[ 2 ]-%msg ).
     cl_abap_unit_assert=>assert_equals( act = message->if_t100_message~t100key
                                         exp = zcm_apg_point=>interface_not_implemented
                                         msg = `A class that is not a handler must report interface_not_implemented` ).
@@ -388,7 +391,7 @@ CLASS ltc_gate_validations IMPLEMENTATION.
     when_validated( ).
 
     " ASSERT - the UI can only highlight the field when it is marked
-    cl_abap_unit_assert=>assert_equals( act = reported-gate[ 1 ]-%element-handlerclass
+    cl_abap_unit_assert=>assert_equals( act = reported-gate[ 2 ]-%element-handlerclass
                                         exp = if_abap_behv=>mk-on
                                         msg = `The offending field must be marked so the UI can highlight it` ).
   ENDMETHOD.

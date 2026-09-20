@@ -1,8 +1,9 @@
 "! Shared rule set for the Active / ActivationClass field pair.
 CLASS lcl_activation_check DEFINITION FINAL CREATE PUBLIC.
   PUBLIC SECTION.
-    "! One rule violation, named by the message it maps to
+
     TYPES: BEGIN OF ty_finding,
+             "! One rule violation, named by the message it maps to
              textid     LIKE if_t100_message=>t100key,
              class_name TYPE string,
            END OF ty_finding.
@@ -134,7 +135,7 @@ ENDCLASS.
 
 
 CLASS lhc_gate IMPLEMENTATION.
-  METHOD validatehandlerclass.
+    METHOD validatehandlerclass.
     READ ENTITIES OF zr_apg_point IN LOCAL MODE
          ENTITY gate
          FIELDS ( handlerclass )
@@ -144,6 +145,11 @@ CLASS lhc_gate IMPLEMENTATION.
     DATA(class_inspector) = lcl_point_factory=>class_inspector( ).
 
     LOOP AT gates INTO DATA(gate).
+      " Draft: drop the previous state message before re-reporting, otherwise a
+      " field the user has just corrected keeps its old error on the UI
+      INSERT VALUE #( %tky        = gate-%tky
+                      %state_area = state_area_handler ) INTO TABLE reported-gate.
+
       DATA(finding) = VALUE lcl_activation_check=>ty_finding( ).
 
       IF gate-handlerclass IS INITIAL.
@@ -169,12 +175,9 @@ CLASS lhc_gate IMPLEMENTATION.
                           interface_name = |{ zif_apg_class_inspector=>interface-handler }| )
                       %element-handlerclass = if_abap_behv=>mk-on ) INTO TABLE reported-gate.
     ENDLOOP.
-    " Draft: drop the previous state message before re-reporting
-    INSERT VALUE #( %tky        = gate-%tky
-                    %state_area = state_area_handler ) INTO TABLE reported-gate.
   ENDMETHOD.
 
-  METHOD validateactivationclass.
+    METHOD validateactivationclass.
     READ ENTITIES OF zr_apg_point IN LOCAL MODE
          ENTITY gate
          FIELDS ( active activationclass )
@@ -185,12 +188,17 @@ CLASS lhc_gate IMPLEMENTATION.
     DATA(toggle_interface) = |{ zif_apg_class_inspector=>interface-toggle }|.
 
     LOOP AT gates INTO DATA(gate).
+      " Draft: drop the previous state message before re-reporting
+      INSERT VALUE #( %tky        = gate-%tky
+                      %state_area = state_area_activation ) INTO TABLE reported-gate.
+
       DATA(findings) = activation_check->check( active           = gate-active
                                                 activation_class = gate-activationclass ).
 
       LOOP AT findings INTO DATA(finding).
         INSERT VALUE #( %tky = gate-%tky ) INTO TABLE failed-gate.
         INSERT VALUE #( %tky                     = gate-%tky
+                        %state_area              = state_area_activation
                         %msg                     = NEW zcm_apg_point(
                                                            severity       = if_abap_behv_message=>severity-error
                                                            textid         = finding-textid
