@@ -4,7 +4,9 @@
 
 annotate view ZC_APG_GateHandle with
 {
-  @UI.facet: [ { id: 'idIdentification', type: #IDENTIFICATION_REFERENCE, label: 'Handler Details', position: 10 } ]
+  @UI.facet: [ { id: 'idIdentification', type: #IDENTIFICATION_REFERENCE, label: 'Handler Details', position: 10 },
+               { id: 'idAdminData', type: #FIELDGROUP_REFERENCE, label: 'Administrative Data',
+                 targetQualifier: 'AdminData', position: 20 } ]
   @UI.identification: [ { position: 10 } ]
   @UI.lineItem: [ { position: 10 } ]
   @UI.selectionField: [ { position: 10 } ]
@@ -35,7 +37,16 @@ annotate view ZC_APG_GateHandle with
   @UI.lineItem: [ { position: 60 } ]
   Param2;
 
-  @UI.hidden: true
+  @UI.fieldGroup: [ { qualifier: 'AdminData', position: 10 } ]
+  CreatedBy;
+
+  @UI.fieldGroup: [ { qualifier: 'AdminData', position: 20 } ]
+  CreatedAt;
+
+  @UI.fieldGroup: [ { qualifier: 'AdminData', position: 30 } ]
+  LastChangedBy;
+
+  @UI.fieldGroup: [ { qualifier: 'AdminData', position: 40 } ]
   LastChangedAt;
 
   @UI.hidden: true

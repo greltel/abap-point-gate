@@ -375,8 +375,9 @@ CLASS ltc_gate_validations IMPLEMENTATION.
     " ASSERT
     cl_abap_unit_assert=>assert_initial( act = failed-gate
                                          msg = `A valid handler class must not fail the gate` ).
-    cl_abap_unit_assert=>assert_initial( act = reported-gate
-                                         msg = `A valid handler class must not report anything` ).
+    cl_abap_unit_assert=>assert_equals( act = lines( reported-gate )
+                                        exp = 1
+                                        msg = `A valid handler class must leave only the state-area reset behind` ).
   ENDMETHOD.
 
   METHOD given_failure_marks_element.

@@ -28,6 +28,11 @@ etag master LocalLastChangedAt
 
   association _Gates { create; with draft; }
 
+  side effects
+  {
+    field Active affects field ActivationClass;
+  }
+
   field ( readonly ) CreatedAt, CreatedBy, LastChangedAt, LastChangedBy, LocalLastChangedAt;
   field ( mandatory : create, readonly : update ) PointId;
 
@@ -64,6 +69,11 @@ etag master LocalLastChangedAt
   validation validateActivationClass on save { field Active, ActivationClass; create; update; }
 
   association _Point { with draft; }
+
+  side effects
+  {
+    field Active affects field ActivationClass;
+  }
 
   field ( readonly ) PointId, CreatedAt, CreatedBy, LastChangedAt, LastChangedBy, LocalLastChangedAt;
   field ( mandatory : create ) HandlerClass;

@@ -1,7 +1,12 @@
 @EndUserText.label: 'Service definition for Point Gate'
 define service ZUI_APG_POINT_V4 {
-  expose ZC_APG_Point         as Point;
-  expose ZC_APG_GateHandle    as Gate;
-  expose ZI_APG_POINT_TYPE_VH as PointTypeVH;
-  expose ZI_APG_ACTIVE_VH     as ActivationStatusVH;
+  expose ZC_APG_Point              as Point;
+  expose ZC_APG_GateHandle         as Gate;
+  expose ZI_APG_POINT_VH           as PointVH;
+  expose ZI_APG_POINT_TYPE_VH      as PointTypeVH;
+  expose ZI_APG_ACTIVE_VH          as ActivationStatusVH;
+  expose ZI_APG_POINT_ACT_CLASS_VH as PointActivationClassVH;
+  expose ZI_APG_GATE_ACT_CLASS_VH  as GateActivationClassVH;
+  expose ZI_APG_MAINPROG_VH        as MainProgramVH;
+  expose ZI_APG_INCLUDE_VH         as IncludeVH;
 }
