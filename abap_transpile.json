@@ -11,7 +11,7 @@
   "output_folder": "output",
   "libs": [
     {
-      "folder": "offstack/stubs",
+      "folder": "/offstack/stubs",
       "files": "/src/**/*.*"
     },
     {
