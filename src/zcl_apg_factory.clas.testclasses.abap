@@ -3,15 +3,18 @@ CLASS ltd_handler DEFINITION FINAL FOR TESTING.
     INTERFACES zif_apg_handler.
 ENDCLASS.
 
+
 CLASS ltd_handler IMPLEMENTATION.
   METHOD zif_apg_handler~execute.
   ENDMETHOD.
 ENDCLASS.
 
+
 CLASS ltd_failing_toggle DEFINITION FINAL FOR TESTING.
   PUBLIC SECTION.
     INTERFACES zif_apg_activation_toggle.
 ENDCLASS.
+
 
 CLASS ltd_failing_toggle IMPLEMENTATION.
   METHOD zif_apg_activation_toggle~is_active.
@@ -19,6 +22,7 @@ CLASS ltd_failing_toggle IMPLEMENTATION.
                                        class_name = `LTD_FAILING_TOGGLE` ).
   ENDMETHOD.
 ENDCLASS.
+
 
 CLASS ltd_counting_toggle DEFINITION FINAL FOR TESTING.
   PUBLIC SECTION.
@@ -33,24 +37,26 @@ CLASS ltd_counting_toggle DEFINITION FINAL FOR TESTING.
     DATA active TYPE abap_bool.
 ENDCLASS.
 
+
 CLASS ltd_counting_toggle IMPLEMENTATION.
   METHOD constructor.
     me->active = active.
   ENDMETHOD.
 
   METHOD zif_apg_activation_toggle~is_active.
-    call_count = call_count + 1.
+    call_count += 1.
     result = active.
   ENDMETHOD.
 ENDCLASS.
 
 
-CLASS lth_factory DEFINITION ABSTRACT FOR TESTING RISK LEVEL HARMLESS
-  DURATION SHORT..
+CLASS lth_factory DEFINITION ABSTRACT
+  FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
+
   PROTECTED SECTION.
-    CONSTANTS point_id        TYPE zapg_point_id VALUE 'TEST'.
-    CONSTANTS handler_class_1 TYPE zapg_handler_class VALUE 'LTD_HANDLER_1'.
-    CONSTANTS handler_class_2 TYPE zapg_handler_class VALUE 'LTD_HANDLER_2'.
+    CONSTANTS point_id        TYPE zapg_point_id         VALUE 'TEST'.
+    CONSTANTS handler_class_1 TYPE zapg_handler_class    VALUE 'LTD_HANDLER_1'.
+    CONSTANTS handler_class_2 TYPE zapg_handler_class    VALUE 'LTD_HANDLER_2'.
     CONSTANTS point_toggle    TYPE zapg_activation_class VALUE 'LTD_POINT_TOGGLE'.
     CONSTANTS gate_toggle     TYPE zapg_activation_class VALUE 'LTD_GATE_TOGGLE'.
     CONSTANTS failing_toggle  TYPE zapg_activation_class VALUE 'LTD_FAILING_TOGGLE'.
@@ -73,7 +79,6 @@ ENDCLASS.
 
 
 CLASS lth_factory IMPLEMENTATION.
-
   METHOD arrange_fixture.
     zcl_apg_injector=>clear( ).
 
@@ -96,17 +101,14 @@ CLASS lth_factory IMPLEMENTATION.
     result = zcl_apg_factory=>get_active_handlers_for_gate( point_id = point_id
                                                             context  = context ).
   ENDMETHOD.
-
 ENDCLASS.
 
 
 "! Activation logic against injected configurations - no database involved.
 "! Runs in ADT and in the off-stack CI alike.
 CLASS ltc_factory DEFINITION
-  INHERITING FROM lth_factory
-  FINAL FOR TESTING
-  RISK LEVEL HARMLESS
-  DURATION SHORT.
+  INHERITING FROM lth_factory FINAL
+  FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
 
   PRIVATE SECTION.
     METHODS setup.
@@ -117,30 +119,29 @@ CLASS ltc_factory DEFINITION
 
     METHODS gate
       IMPORTING handler_class          TYPE zapg_handler_class
-                gate_active            TYPE zapg_active DEFAULT zcl_apg_factory=>activation_status-active
+                gate_active            TYPE zapg_active           DEFAULT zcl_apg_factory=>activation_status-active
                 gate_activation_class  TYPE zapg_activation_class OPTIONAL
-                point_active           TYPE zapg_active DEFAULT zcl_apg_factory=>activation_status-active
+                point_active           TYPE zapg_active           DEFAULT zcl_apg_factory=>activation_status-active
                 point_activation_class TYPE zapg_activation_class OPTIONAL
-                param_1                TYPE zapg_parameter OPTIONAL
-                param_2                TYPE zapg_parameter OPTIONAL
+                param_1                TYPE zapg_parameter        OPTIONAL
+                param_2                TYPE zapg_parameter        OPTIONAL
       RETURNING VALUE(result)          TYPE zcl_apg_injector=>ty_configuration.
 
-    METHODS given_active_gates_then_all     FOR TESTING RAISING zcx_apg_error.
-    METHODS given_inactive_gate_then_skip   FOR TESTING RAISING zcx_apg_error.
-    METHODS given_unknown_status_then_skip  FOR TESTING RAISING zcx_apg_error.
-    METHODS given_point_off_then_empty      FOR TESTING RAISING zcx_apg_error.
-    METHODS given_point_tgl_then_one_call   FOR TESTING RAISING zcx_apg_error.
-    METHODS given_point_tgl_off_then_empty  FOR TESTING RAISING zcx_apg_error.
-    METHODS given_gate_tgl_on_then_runs     FOR TESTING RAISING zcx_apg_error.
-    METHODS given_gate_tgl_off_then_skip    FOR TESTING RAISING zcx_apg_error.
-    METHODS given_params_then_delivered     FOR TESTING RAISING zcx_apg_error.
-    METHODS given_toggle_err_then_008       FOR TESTING RAISING zcx_apg_error.
-    METHODS given_empty_inject_then_none    FOR TESTING RAISING zcx_apg_error.
+    METHODS given_active_gates_then_all    FOR TESTING RAISING zcx_apg_error.
+    METHODS given_inactive_gate_then_skip  FOR TESTING RAISING zcx_apg_error.
+    METHODS given_unknown_status_then_skip FOR TESTING RAISING zcx_apg_error.
+    METHODS given_point_off_then_empty     FOR TESTING RAISING zcx_apg_error.
+    METHODS given_point_tgl_then_one_call  FOR TESTING RAISING zcx_apg_error.
+    METHODS given_point_tgl_off_then_empty FOR TESTING RAISING zcx_apg_error.
+    METHODS given_gate_tgl_on_then_runs    FOR TESTING RAISING zcx_apg_error.
+    METHODS given_gate_tgl_off_then_skip   FOR TESTING RAISING zcx_apg_error.
+    METHODS given_params_then_delivered    FOR TESTING RAISING zcx_apg_error.
+    METHODS given_toggle_err_then_008      FOR TESTING RAISING zcx_apg_error.
+    METHODS given_empty_inject_then_none   FOR TESTING RAISING zcx_apg_error.
 ENDCLASS.
 
 
 CLASS ltc_factory IMPLEMENTATION.
-
   METHOD setup.
     arrange_fixture( ).
   ENDMETHOD.
@@ -174,11 +175,11 @@ CLASS ltc_factory IMPLEMENTATION.
     DATA(handlers) = resolve( ).
 
     " ASSERT
-    cl_abap_unit_assert=>assert_equals( act = lines( handlers )
-                                        exp = 2
+    cl_abap_unit_assert=>assert_equals( exp = 2
+                                        act = lines( handlers )
                                         msg = 'Both active gates must be resolved' ).
-    cl_abap_unit_assert=>assert_equals( act = handlers[ 1 ]-handler
-                                        exp = handler_1
+    cl_abap_unit_assert=>assert_equals( exp = handler_1
+                                        act = handlers[ 1 ]-handler
                                         msg = 'Configuration order must be execution order' ).
   ENDMETHOD.
 
@@ -192,11 +193,11 @@ CLASS ltc_factory IMPLEMENTATION.
     DATA(handlers) = resolve( ).
 
     " ASSERT
-    cl_abap_unit_assert=>assert_equals( act = lines( handlers )
-                                        exp = 1
+    cl_abap_unit_assert=>assert_equals( exp = 1
+                                        act = lines( handlers )
                                         msg = 'Inactive gate must not be resolved' ).
-    cl_abap_unit_assert=>assert_equals( act = handlers[ 1 ]-handler
-                                        exp = handler_2
+    cl_abap_unit_assert=>assert_equals( exp = handler_2
+                                        act = handlers[ 1 ]-handler
                                         msg = 'Only the active gate must be resolved' ).
   ENDMETHOD.
 
@@ -244,11 +245,11 @@ CLASS ltc_factory IMPLEMENTATION.
     DATA(handlers) = resolve( ).
 
     " ASSERT
-    cl_abap_unit_assert=>assert_equals( act = lines( handlers )
-                                        exp = 3
+    cl_abap_unit_assert=>assert_equals( exp = 3
+                                        act = lines( handlers )
                                         msg = 'All gates of an active point must be resolved' ).
-    cl_abap_unit_assert=>assert_equals( act = toggle->call_count
-                                        exp = 1
+    cl_abap_unit_assert=>assert_equals( exp = 1
+                                        act = toggle->call_count
                                         msg = 'Point toggle must be evaluated exactly once' ).
   ENDMETHOD.
 
@@ -280,8 +281,8 @@ CLASS ltc_factory IMPLEMENTATION.
     DATA(handlers) = resolve( ).
 
     " ASSERT
-    cl_abap_unit_assert=>assert_equals( act = handlers[ 1 ]-handler
-                                        exp = handler_1
+    cl_abap_unit_assert=>assert_equals( exp = handler_1
+                                        act = handlers[ 1 ]-handler
                                         msg = 'Gate toggle returning true must resolve the gate' ).
   ENDMETHOD.
 
@@ -298,11 +299,11 @@ CLASS ltc_factory IMPLEMENTATION.
     DATA(handlers) = resolve( ).
 
     " ASSERT
-    cl_abap_unit_assert=>assert_equals( act = lines( handlers )
-                                        exp = 1
+    cl_abap_unit_assert=>assert_equals( exp = 1
+                                        act = lines( handlers )
                                         msg = 'Gate toggle returning false must skip only that gate' ).
-    cl_abap_unit_assert=>assert_equals( act = handlers[ 1 ]-handler
-                                        exp = handler_2
+    cl_abap_unit_assert=>assert_equals( exp = handler_2
+                                        act = handlers[ 1 ]-handler
                                         msg = 'The remaining active gate must still be resolved' ).
   ENDMETHOD.
 
@@ -316,11 +317,11 @@ CLASS ltc_factory IMPLEMENTATION.
     DATA(handlers) = resolve( ).
 
     " ASSERT
-    cl_abap_unit_assert=>assert_equals( act = handlers[ 1 ]-parameters-param_1
-                                        exp = 'ALPHA'
+    cl_abap_unit_assert=>assert_equals( exp = 'ALPHA'
+                                        act = handlers[ 1 ]-parameters-param_1
                                         msg = 'Param 1 must reach the resolved handler entry' ).
-    cl_abap_unit_assert=>assert_equals( act = handlers[ 1 ]-parameters-param_2
-                                        exp = 'BETA'
+    cl_abap_unit_assert=>assert_equals( exp = 'BETA'
+                                        act = handlers[ 1 ]-parameters-param_2
                                         msg = 'Param 2 must reach the resolved handler entry' ).
   ENDMETHOD.
 
@@ -338,8 +339,8 @@ CLASS ltc_factory IMPLEMENTATION.
         cl_abap_unit_assert=>fail( 'Failing toggle must raise zcx_apg_error' ).
       CATCH zcx_apg_error INTO DATA(error).
         " ASSERT
-        cl_abap_unit_assert=>assert_equals( act = error->if_t100_message~t100key
-                                            exp = zcx_apg_error=>toggle_evaluation_failed
+        cl_abap_unit_assert=>assert_equals( exp = zcx_apg_error=>toggle_evaluation_failed
+                                            act = error->if_t100_message~t100key
                                             msg = 'Failing toggle must surface textid toggle_evaluation_failed' ).
     ENDTRY.
   ENDMETHOD.
@@ -355,7 +356,6 @@ CLASS ltc_factory IMPLEMENTATION.
     cl_abap_unit_assert=>assert_initial( act = handlers
                                          msg = 'Injected empty configuration must yield no handlers' ).
   ENDMETHOD.
-
 ENDCLASS.
 
 
@@ -363,41 +363,40 @@ ENDCLASS.
 "! mapping and the injection-wins rule. Needs CL_OSQL_TEST_ENVIRONMENT, so it
 "! runs in ADT only - every method is listed in options.skip off-stack.
 CLASS ltc_factory_db DEFINITION
-  INHERITING FROM lth_factory
-  FINAL FOR TESTING
-  RISK LEVEL HARMLESS
-  DURATION SHORT.
+  INHERITING FROM lth_factory FINAL
+  FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
 
   PRIVATE SECTION.
     CLASS-DATA osql_environment TYPE REF TO if_osql_test_environment.
 
     CLASS-METHODS class_teardown.
+
     METHODS setup.
     METHODS teardown.
 
     METHODS insert_point
       IMPORTING active           TYPE zapg_active
                 activation_class TYPE zapg_activation_class OPTIONAL.
+
     METHODS insert_gate
       IMPORTING seqno            TYPE zapg_seqno
                 handler_class    TYPE zapg_handler_class
                 active           TYPE zapg_active
                 activation_class TYPE zapg_activation_class OPTIONAL
-                param_1          TYPE zapg_parameter OPTIONAL
-                param_2          TYPE zapg_parameter OPTIONAL.
+                param_1          TYPE zapg_parameter        OPTIONAL
+                param_2          TYPE zapg_parameter        OPTIONAL.
 
-    METHODS given_db_cfg_then_seq_order    FOR TESTING RAISING zcx_apg_error.
-    METHODS given_db_gate_off_then_skip    FOR TESTING RAISING zcx_apg_error.
-    METHODS given_db_point_off_then_empty  FOR TESTING RAISING zcx_apg_error.
-    METHODS given_db_params_then_mapped    FOR TESTING RAISING zcx_apg_error.
-    METHODS given_db_point_tgl_then_used   FOR TESTING RAISING zcx_apg_error.
-    METHODS given_db_gate_tgl_then_used    FOR TESTING RAISING zcx_apg_error.
-    METHODS given_injection_then_no_db     FOR TESTING RAISING zcx_apg_error.
+    METHODS given_db_cfg_then_seq_order   FOR TESTING RAISING zcx_apg_error.
+    METHODS given_db_gate_off_then_skip   FOR TESTING RAISING zcx_apg_error.
+    METHODS given_db_point_off_then_empty FOR TESTING RAISING zcx_apg_error.
+    METHODS given_db_params_then_mapped   FOR TESTING RAISING zcx_apg_error.
+    METHODS given_db_point_tgl_then_used  FOR TESTING RAISING zcx_apg_error.
+    METHODS given_db_gate_tgl_then_used   FOR TESTING RAISING zcx_apg_error.
+    METHODS given_injection_then_no_db    FOR TESTING RAISING zcx_apg_error.
 ENDCLASS.
 
 
 CLASS ltc_factory_db IMPLEMENTATION.
-
   METHOD class_teardown.
     IF osql_environment IS BOUND.
       osql_environment->destroy( ).
@@ -454,11 +453,11 @@ CLASS ltc_factory_db IMPLEMENTATION.
     DATA(handlers) = resolve( ).
 
     " ASSERT
-    cl_abap_unit_assert=>assert_equals( act = lines( handlers )
-                                        exp = 2
+    cl_abap_unit_assert=>assert_equals( exp = 2
+                                        act = lines( handlers )
                                         msg = 'Both active gates must be read' ).
-    cl_abap_unit_assert=>assert_equals( act = handlers[ 1 ]-handler
-                                        exp = handler_1
+    cl_abap_unit_assert=>assert_equals( exp = handler_1
+                                        act = handlers[ 1 ]-handler
                                         msg = 'Gates must be read in seqno order' ).
   ENDMETHOD.
 
@@ -476,11 +475,11 @@ CLASS ltc_factory_db IMPLEMENTATION.
     DATA(handlers) = resolve( ).
 
     " ASSERT
-    cl_abap_unit_assert=>assert_equals( act = lines( handlers )
-                                        exp = 1
+    cl_abap_unit_assert=>assert_equals( exp = 1
+                                        act = lines( handlers )
                                         msg = 'Inactive gate must be filtered by the read' ).
-    cl_abap_unit_assert=>assert_equals( act = handlers[ 1 ]-handler
-                                        exp = handler_2
+    cl_abap_unit_assert=>assert_equals( exp = handler_2
+                                        act = handlers[ 1 ]-handler
                                         msg = 'Only the active gate must be read' ).
   ENDMETHOD.
 
@@ -512,11 +511,11 @@ CLASS ltc_factory_db IMPLEMENTATION.
     DATA(handlers) = resolve( ).
 
     " ASSERT
-    cl_abap_unit_assert=>assert_equals( act = handlers[ 1 ]-parameters-param_1
-                                        exp = 'ALPHA'
+    cl_abap_unit_assert=>assert_equals( exp = 'ALPHA'
+                                        act = handlers[ 1 ]-parameters-param_1
                                         msg = 'PARAM_1 must be read from ZAPG_GATE_HANDLE' ).
-    cl_abap_unit_assert=>assert_equals( act = handlers[ 1 ]-parameters-param_2
-                                        exp = 'BETA'
+    cl_abap_unit_assert=>assert_equals( exp = 'BETA'
+                                        act = handlers[ 1 ]-parameters-param_2
                                         msg = 'PARAM_2 must be read from ZAPG_GATE_HANDLE' ).
   ENDMETHOD.
 
@@ -534,11 +533,11 @@ CLASS ltc_factory_db IMPLEMENTATION.
     DATA(handlers) = resolve( ).
 
     " ASSERT
-    cl_abap_unit_assert=>assert_equals( act = lines( handlers )
-                                        exp = 1
+    cl_abap_unit_assert=>assert_equals( exp = 1
+                                        act = lines( handlers )
                                         msg = 'Custom-toggled point must be read' ).
-    cl_abap_unit_assert=>assert_equals( act = toggle->call_count
-                                        exp = 1
+    cl_abap_unit_assert=>assert_equals( exp = 1
+                                        act = toggle->call_count
                                         msg = 'Point activation class must be read from ZAPG_POINT' ).
   ENDMETHOD.
 
@@ -558,8 +557,8 @@ CLASS ltc_factory_db IMPLEMENTATION.
     " ASSERT
     cl_abap_unit_assert=>assert_initial( act = handlers
                                          msg = 'Gate toggle returning false must skip the gate' ).
-    cl_abap_unit_assert=>assert_equals( act = toggle->call_count
-                                        exp = 1
+    cl_abap_unit_assert=>assert_equals( exp = 1
+                                        act = toggle->call_count
                                         msg = 'Gate activation class must be read from ZAPG_GATE_HANDLE' ).
   ENDMETHOD.
 
@@ -579,5 +578,4 @@ CLASS ltc_factory_db IMPLEMENTATION.
     cl_abap_unit_assert=>assert_initial( act = handlers
                                          msg = 'An injected empty configuration must win over the database' ).
   ENDMETHOD.
-
 ENDCLASS.
