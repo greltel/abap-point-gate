@@ -35,15 +35,12 @@
     "addFilenames": true,
     "addCommonJS": true,
     "unknownTypes": "runtimeError",
+     "setup": {
+      "filename": "../offstack/setup.mjs",
+      "preFunction": "setup"
+    },
     "skip": [
-      { "object": "ZCL_APG_DOMAIN_VALUES", "class": "LTC_DOMAIN_VALUES", "method": "GIVEN_STATUS_THEN_TEXTS",       "note": "open-abap-core reads f.ddtext, transpiler emits f.description - fixed-value texts are empty off-stack; remove after upstream fix" },
-      { "object": "ZCL_APG_FACTORY",       "class": "LTC_FACTORY_DB",    "method": "GIVEN_DB_CFG_THEN_SEQ_ORDER",   "note": "CL_OSQL_TEST_ENVIRONMENT has no off-stack implementation; runs in ADT" },
-      { "object": "ZCL_APG_FACTORY",       "class": "LTC_FACTORY_DB",    "method": "GIVEN_DB_GATE_OFF_THEN_SKIP",   "note": "CL_OSQL_TEST_ENVIRONMENT has no off-stack implementation; runs in ADT" },
-      { "object": "ZCL_APG_FACTORY",       "class": "LTC_FACTORY_DB",    "method": "GIVEN_DB_POINT_OFF_THEN_EMPTY", "note": "CL_OSQL_TEST_ENVIRONMENT has no off-stack implementation; runs in ADT" },
-      { "object": "ZCL_APG_FACTORY",       "class": "LTC_FACTORY_DB",    "method": "GIVEN_DB_PARAMS_THEN_MAPPED",   "note": "CL_OSQL_TEST_ENVIRONMENT has no off-stack implementation; runs in ADT" },
-      { "object": "ZCL_APG_FACTORY",       "class": "LTC_FACTORY_DB",    "method": "GIVEN_DB_POINT_TGL_THEN_USED",  "note": "CL_OSQL_TEST_ENVIRONMENT has no off-stack implementation; runs in ADT" },
-      { "object": "ZCL_APG_FACTORY",       "class": "LTC_FACTORY_DB",    "method": "GIVEN_DB_GATE_TGL_THEN_USED",   "note": "CL_OSQL_TEST_ENVIRONMENT has no off-stack implementation; runs in ADT" },
-      { "object": "ZCL_APG_FACTORY",       "class": "LTC_FACTORY_DB",    "method": "GIVEN_INJECTION_THEN_NO_DB",    "note": "CL_OSQL_TEST_ENVIRONMENT has no off-stack implementation; runs in ADT" }
+      { "object": "ZCL_APG_DOMAIN_VALUES", "class": "LTC_DOMAIN_VALUES", "method": "GIVEN_STATUS_THEN_TEXTS",       "note": "open-abap-core reads f.ddtext, transpiler emits f.description - fixed-value texts are empty off-stack; remove after upstream fix" }
     ]
   }
 }
