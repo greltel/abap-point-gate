@@ -15,10 +15,6 @@
   "output_folder": "output",
   "libs": [
     {
-      "folder": "/offstack/stubs",
-      "files": "/src/**/*.*"
-    },
-    {
       "url": "https://github.com/open-abap/open-abap-core"
     },
     {
@@ -36,7 +32,7 @@
     "addCommonJS": true,
     "unknownTypes": "runtimeError",
     "setup": {
-      "filename": "../offstack/setup.mjs",
+      "filename": "../test/setup.mjs",
       "preFunction": "setup"
     }
   }
