@@ -1,5 +1,5 @@
 {
-  "_comment": "Off-stack transpile scope: only the runtime classes, interfaces, exception, message class and the DDIC of the configuration tables. Everything RAP (ZBP_*, BDEF, projections, DCL, service binding), all CDS and the custom-entity value-help query classes stay out - the transpiler does not parse them and ADT/ABAP Unit validate them instead.",
+  "_comment": "Off-stack transpile scope: only the runtime classes, interfaces, exception, message class and the DDIC of the configuration tables. Everything RAP (ZBP_*, BDEF, projections, DCL, service binding), all CDS and the custom-entity value-help query classes stay out - the transpiler does not parse them and ADT/ABAP Unit validate them instead. The test classes of the two sample classes (zcl_apg_act_toggle_sample, zcl_apg_sample_execution) are excluded too: they build an I_JournalEntry, which is released on S/4HANA but not for ABAP Cloud, so open-abap-core does not ship it; off-stack the first of those tests fails with 'Void type: I_JOURNALENTRY' and stops the runner. They run in ADT.",
   "input_folder": "src",
   "input_filter": [
     "zif_apg_.*\\.intf\\.",
