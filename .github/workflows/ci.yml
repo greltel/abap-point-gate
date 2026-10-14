@@ -1,4 +1,4 @@
-name: Unit Tests
+name: ABAP Unit Testing
 
 on:
   push:
@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   test:
-    name: Run
+    name: Transpile and run ABAP Unit
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
