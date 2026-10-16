@@ -3,29 +3,16 @@ updates:
   - package-ecosystem: npm
     directory: /
     schedule:
-      interval: daily
-      time: "06:00"
+      interval: cron
+      cronjob: "0 7 1,11,21 * *"
       timezone: Europe/Athens
-    open-pull-requests-limit: 5
-    commit-message:
-      prefix: "build(deps)"
-    labels:
-      - dependencies
+    cooldown:
+      default-days: 5
     groups:
       abaplint:
         patterns:
           - "@abaplint/*"
-
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
-    open-pull-requests-limit: 3
-    commit-message:
-      prefix: "ci(deps)"
-    labels:
-      - dependencies
-    groups:
-      actions:
-        patterns:
-          - "*"
